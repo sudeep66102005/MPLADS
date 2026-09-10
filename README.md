@@ -87,19 +87,60 @@ eSAKSHI / MPLADS DATA  →  BACKEND API (Python/FastAPI)  →  DATABASE (Postgre
 
 ```
 MPLADS/
-├── frontend/     Next.js + TypeScript + Tailwind dashboard (see frontend/README.md)
-└── backend/      FastAPI backend + rule-based AI scoring skeleton (see backend/README.md)
+├── .github/workflows/deploy.yml   Builds + publishes the dashboard to GitHub Pages
+├── frontend/                      Next.js + TypeScript + Tailwind dashboard (see frontend/README.md)
+└── backend/                       FastAPI backend + rule-based AI scoring skeleton (see backend/README.md)
 ```
+
+## Live deployment
+
+The dashboard is built as a static site by GitHub Actions
+(`.github/workflows/deploy.yml`) and published to GitHub Pages. The build
+pipeline (`npm install` → lint → `next build` → upload artifact) is passing;
+it prerenders 24 static pages including one per project.
+
+### ⚠️ One-time setup required (repo admin)
+
+Pages must be switched on once before the deploy step can publish:
+
+> **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
+>
+> https://github.com/sudeep66102005/MPLADS/settings/pages
+
+Then re-run the workflow (**Actions → Deploy Dashboard to GitHub Pages →
+Re-run jobs**). After that, every push to `frontend/**` redeploys automatically.
+
+This step cannot be automated: creating a Pages site requires repo-admin
+rights, and the Actions `GITHUB_TOKEN` is explicitly not permitted to do it
+(it can deploy to an existing Pages site, but not create one) — the deploy job
+fails with `HttpError: Not Found` until it's enabled.
+
+**Live URL once enabled:** https://sudeep66102005.github.io/MPLADS/
+
+Because the site is served from a `/MPLADS/` sub-path, the build sets
+`basePath`/`assetPrefix` from a `BASE_PATH` env var. `BASE_PATH` is unset
+locally, so `npm run dev` still serves from `/`.
 
 ## Sandbox limitation note
 
 This build was authored in a network-restricted sandbox: outbound requests
 to the npm registry and PyPI both returned `403` through the environment's
 proxy (`INTEGRATIONS_ONLY` network mode), so `npm install`, `create-next-app`,
-and `pip install` could not be run here, and neither app could be
-build/smoke-tested in this session. The map deliberately uses key-free tile
-providers (OpenStreetMap + Esri World Imagery) so that no API key or paid
-account is needed to get it rendering on your machine. Every frontend and backend file was
+and `pip install` could not be run there. The map deliberately uses key-free
+tile providers (OpenStreetMap + Esri World Imagery) so that no API key or paid
+account is needed to get it rendering.
+
+**The frontend is now genuinely build-verified** — the GitHub Actions workflow
+runs `npm install` and `next build` on GitHub's runners and passes. That build
+caught three real type errors that per-file `tsc` in the sandbox could not
+(they needed the actual installed dependency types): a hand-rolled icon
+`ComponentType` incompatible with lucide's `LucideIcon`, a `KpiCard.trend` prop
+typed `string` but used as a boolean, and a missing `generateStaticParams` on
+the dynamic project route.
+
+**The backend is still NOT verified** — `pip install` and `pytest` have not been
+run anywhere. Only `python -m py_compile` (syntax) has passed. Run
+`cd backend && pip install -r requirements.txt && pytest` before trusting it. Every frontend and backend file was
 hand-authored to match what those tools would scaffold, and syntax was
 verified with the TypeScript/Python compilers where possible
 (`tsc`/`py_compile`). **Run `npm install && npm run build` (frontend) and
