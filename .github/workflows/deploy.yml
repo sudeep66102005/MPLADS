@@ -20,10 +20,14 @@ permissions:
   pages: write
   id-token: write
 
-# Never run two deploys at once; cancel superseded in-progress runs.
+# Allow only one concurrent deployment. cancel-in-progress MUST stay false:
+# a production deployment already underway should be allowed to finish, and
+# with `true` two runs triggered close together (e.g. re-running two runs from
+# the Actions UI) cancel each other and neither publishes. This matches
+# GitHub's official Pages starter workflow.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
