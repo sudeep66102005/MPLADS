@@ -18,7 +18,8 @@ import {
   Droplets,
   HeartPulse,
   Car,
-  Building2
+  Building2,
+  type LucideIcon
 } from "lucide-react";
 import {
   constituencyKeyInsight,
@@ -40,7 +41,10 @@ const gapLevelColor: Record<string, "red" | "amber" | "emerald"> = {
   Low: "emerald"
 };
 
-const sectorIcon: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+// Use lucide's own LucideIcon type rather than a hand-rolled ComponentType:
+// lucide accepts `size?: string | number`, so a narrower `size?: number`
+// signature is not assignable.
+const sectorIcon: Record<string, LucideIcon> = {
   "Drinking Water": Droplets,
   Healthcare: HeartPulse,
   Sanitation: Activity,

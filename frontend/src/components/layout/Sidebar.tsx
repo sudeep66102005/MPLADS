@@ -14,7 +14,8 @@ import {
   BellRing,
   MessageSquareText,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  type LucideIcon
 } from "lucide-react";
 import { classNames } from "@/lib/format";
 import { priorityQueueCount } from "@/lib/mockData";
@@ -22,7 +23,7 @@ import { priorityQueueCount } from "@/lib/mockData";
 interface NavItem {
   href: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   badge?: number;
 }
 
