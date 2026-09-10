@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -42,9 +43,9 @@ export default function MpAttentionCentrePage() {
                     {p.constituency} · Predicted delay: {p.predictedDelayDays} days
                   </p>
                 </div>
-                <a href={`/projects/${p.id}`} className="text-blue-600">
+                <Link href={`/projects/${p.id}`} className="text-blue-600">
                   <ArrowRight size={14} />
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -86,9 +87,9 @@ export default function MpAttentionCentrePage() {
                 {weakestAgency.avgDelayDays} days
               </p>
             </div>
-            <a href="/agency-performance" className="text-blue-600">
+            <Link href="/agency-performance" className="text-blue-600">
               <ArrowRight size={14} />
-            </a>
+            </Link>
           </div>
         </div>
 

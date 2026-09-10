@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, ExportButton } from "@/components/ui/PageHeader";
 import { KpiCard } from "@/components/ui/KpiCard";
@@ -182,9 +183,9 @@ export default function ProjectsPage() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2 text-slate-400">
-                      <a href={`/projects/${p.id}`}>
+                      <Link href={`/projects/${p.id}`}>
                         <Eye size={14} className="hover:text-blue-600" />
-                      </a>
+                      </Link>
                       <MoreVertical size={14} className="hover:text-slate-600 cursor-pointer" />
                     </div>
                   </td>

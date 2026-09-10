@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, ExportButton } from "@/components/ui/PageHeader";
 import { KpiCard } from "@/components/ui/KpiCard";
@@ -181,20 +182,20 @@ export default function MapViewPage() {
               </div>
             </div>
 
-            <a
+            <Link
               href={`/projects/${bhopalSelectedProject.id}`}
               className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg px-3 py-2 hover:bg-blue-700"
             >
               View Detailed Analysis <ArrowRight size={14} />
-            </a>
+            </Link>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold text-slate-800">Nearby Projects ({bhopalNearbyProjects.length})</p>
-              <a className="link-muted" href="/projects">
+              <Link className="link-muted" href="/projects">
                 View All →
-              </a>
+              </Link>
             </div>
             <div className="space-y-2.5">
               {bhopalNearbyProjects.map((p) => (

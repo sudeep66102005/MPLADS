@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -25,8 +26,20 @@ import {
   projectRiskIndicators,
   projectDetailTimeline,
   agencyContribution,
-  sectorGapAnalysis
+  sectorGapAnalysis,
+  projects
 } from "@/lib/mockData";
+
+/**
+ * Required for `output: 'export'` (static export): Next needs the full set of
+ * `id` values at build time so it can pre-render one HTML file per project.
+ * Once this page fetches from the live backend instead of mock data, this
+ * should query the API for project IDs (or the route should move off static
+ * export to on-demand rendering).
+ */
+export function generateStaticParams() {
+  return projects.map((project) => ({ id: project.id }));
+}
 
 const tabs = [
   "Overview",
@@ -211,9 +224,9 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <div className="h-32 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-xs relative overflow-hidden">
               <MapPin size={22} className="text-red-500" />
             </div>
-            <a href="/map" className="link-muted flex justify-end mt-2">
+            <Link href="/map" className="link-muted flex justify-end mt-2">
               View on Map ⤢
-            </a>
+            </Link>
           </div>
 
           <div className="card p-4">
@@ -336,9 +349,9 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-slate-800">Agency Performance ({project.agency})</p>
-            <a className="link-muted" href="/agency-performance">
+            <Link className="link-muted" href="/agency-performance">
               View Agency Details →
-            </a>
+            </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 text-center">
             <div>

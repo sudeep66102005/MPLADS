@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -63,12 +64,12 @@ export default function PriorityQueuePage() {
                   <p className="text-lg font-bold text-slate-800">{p.aiScore}</p>
                   <p className="text-[10px] text-slate-400">AI Score</p>
                 </div>
-                <a
+                <Link
                   href={`/projects/${p.id}`}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg px-3 py-2 hover:bg-blue-700"
                 >
                   <Eye size={13} /> Review
-                </a>
+                </Link>
               </div>
             </div>
           );

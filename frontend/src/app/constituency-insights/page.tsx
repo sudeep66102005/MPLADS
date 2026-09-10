@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, ExportButton } from "@/components/ui/PageHeader";
 import { KpiCard } from "@/components/ui/KpiCard";
@@ -144,9 +145,9 @@ export default function ConstituencyInsightsPage() {
             heatZones={berasiaHeatZones}
             height={300}
           />
-          <a href="/map" className="link-muted flex justify-end mt-2">
+          <Link href="/map" className="link-muted flex justify-end mt-2">
             View Full Map ⤢
-          </a>
+          </Link>
         </div>
 
         <div className="card p-4">
@@ -241,9 +242,9 @@ export default function ConstituencyInsightsPage() {
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-slate-800">Agency Contribution &amp; Performance</p>
-            <a className="link-muted" href="/agency-performance">
+            <Link className="link-muted" href="/agency-performance">
               View Full Analysis →
-            </a>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
