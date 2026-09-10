@@ -62,12 +62,15 @@ jobs:
       - name: Add .nojekyll
         run: touch out/.nojekyll
 
-      # `enablement: true` turns GitHub Pages on for the repo if it isn't
-      # already, using this workflow's `pages: write` permission.
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
+      # NOTE: actions/configure-pages is deliberately NOT used here.
+      #
+      # Its only purpose is to emit base_path/base_url outputs, which we don't
+      # need (BASE_PATH is set explicitly above). Worse, when the repo's Pages
+      # site doesn't exist yet it tries to create one and hard-fails with
+      # "Create Pages site failed: Resource not accessible by integration" —
+      # GITHUB_TOKEN can *deploy to* an existing Pages site but cannot create
+      # one, regardless of `pages: write`. Omitting it keeps this build job
+      # green and still uploads the artifact.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/out
@@ -81,3 +84,21 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+
+# ---------------------------------------------------------------------------
+# ONE-TIME SETUP REQUIRED (repo admin only)
+#
+# Before the deploy job can succeed, GitHub Pages must be switched on for this
+# repository with Actions as its source:
+#
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
+#
+# This cannot be automated from inside the workflow: creating a Pages site
+# needs repo-admin rights, and the Actions GITHUB_TOKEN is not permitted to do
+# it ("Resource not accessible by integration"). Once the switch is flipped,
+# re-run this workflow (Actions → Deploy Dashboard to GitHub Pages → Re-run
+# jobs) and the site publishes to:
+#
+#   https://<owner>.github.io/<repo>/
+# ---------------------------------------------------------------------------
