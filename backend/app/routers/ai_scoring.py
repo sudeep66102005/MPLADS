@@ -2,31 +2,46 @@
 Direct AI Engine endpoints.
 
 Exposes the AI Engine's scoring primitives independently of the
-project/agency resource routers above, for cases where a caller (e.g. a
-batch job re-scoring all projects overnight) wants to invoke scoring
-directly rather than through a resource-shaped endpoint.
+project/agency resource routers, for batch rescoring and direct
+AI engine access.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app import mock_store
-from app.ai_engine.scoring import analyze_project
+from app.ai_engine.scoring import analyze_project_from_model, score_all_projects
+from app.database import get_db
+from app.models import Project
 from app.schemas import ProjectAiAnalysis
 
 router = APIRouter()
 
 
 @router.post("/projects/{project_id}/rescore", response_model=ProjectAiAnalysis)
-def rescore_project(project_id: str) -> ProjectAiAnalysis:
-    """Re-runs AI health/delay/anomaly scoring for a single project.
-
-    In production this would be triggered by an eSAKSHI data-sync webhook
-    or a scheduled batch job, and would persist the refreshed score back
-    to the database rather than only returning it.
-    """
-    project = mock_store.get_project(project_id)
-    if project is None:
+def rescore_project(project_id: str, db: Session = Depends(get_db)) -> ProjectAiAnalysis:
+    """Re-runs AI health/delay/anomaly scoring for a single project and
+    persists the updated score."""
+    project = db.query(Project).filter(Project.id == int(project_id)).first()
+    if project is None or project.is_deleted:
         raise HTTPException(status_code=404, detail="Project not found")
-    return analyze_project(project)
+
+    analysis = analyze_project_from_model(project)
+
+    # Persist updated scores
+    project.ai_health_score = analysis.ai_health_score
+    project.delay_probability_pct = analysis.delay_probability_pct
+    project.predicted_delay_days = analysis.predicted_delay_days
+    project.ai_score = round(100 - analysis.ai_health_score, 1)
+    db.commit()
+
+    return analysis
+
+
+@router.post("/rescore-all")
+def rescore_all_projects(db: Session = Depends(get_db)):
+    """Batch re-score all projects. In production this would be triggered
+    by a scheduled job or data-sync webhook."""
+    count = score_all_projects(db)
+    return {"status": "ok", "projects_scored": count}
