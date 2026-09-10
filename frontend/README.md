@@ -34,15 +34,37 @@ types in `src/lib/types.ts` mirror the backend's Pydantic schemas 1:1.
 
 ## Map
 
-There is no live map SDK (Google Maps / Leaflet+tiles) wired up — this
-sandbox has no outbound network access to fetch a maps API or tile server,
-and no API key was provided. `src/components/map/MapPanel.tsx` is a
-hand-built CSS/SVG stand-in that reproduces the visual structure from the
-screenshots (base layer, faux roads/water/green-belt, area labels, status
-pins, risk heat zones, zoom controls, Map/Satellite tabs, scale bar). It's
-structured so swapping in `react-leaflet` or `@vis.gl/react-google-maps`
-later is a drop-in replacement — the pin/heat-zone data shapes
-(`MapPin`, `HeatZone`, `MapArea`) are the contract to preserve.
+Uses a **real Leaflet map** via `react-leaflet`, with **no API key required**:
+
+- **Street basemap:** OpenStreetMap standard tiles
+- **Satellite basemap:** Esri World Imagery
+- Both are key-free, so the dashboard runs with zero configuration and no
+  billing account. Swap the URLs in `src/components/map/LeafletMap.tsx`
+  (`TILE_LAYERS`) if you later move to Mapbox/Google/MapmyIndia.
+
+Components:
+
+| File | Role |
+|---|---|
+| `src/components/map/types.ts` | `GeoPin` / `GeoHeatZone` contracts (real WGS84 lat/lng) |
+| `src/components/map/LeafletMap.tsx` | The actual Leaflet map — client-only |
+| `src/components/map/MapPanel.tsx` | Wrapper: `next/dynamic` with `ssr: false`, Map/Satellite switcher, risk-heatmap toggle |
+| `src/components/map/MapLegend.tsx` | Project-status legend + layer checkboxes |
+
+Implementation notes:
+
+- Leaflet dereferences `window` at import time, so `LeafletMap` is loaded
+  exclusively client-side through `next/dynamic({ ssr: false })`. Don't
+  import it directly from a server component.
+- Project markers are `CircleMarker`s, not default Leaflet markers — this
+  sidesteps the well-known broken-marker-icon-URL problem under bundlers,
+  and matches the reference design's colored dots.
+- Risk hotspots are Leaflet `Circle`s with radii in **metres** (not pixels).
+- `scrollWheelZoom` is off so the map doesn't hijack page scrolling.
+- Coordinates live in `src/lib/mockData.ts` (`bengaluruMapPins`,
+  `bhopalMapPins`, `berasiaMapPins` + matching heat zones) and are real
+  lat/lng, so they can be replaced by the backend's `location` field with
+  no transformation.
 
 ## Running locally
 
@@ -74,8 +96,6 @@ npm run lint    # ESLint
 ## Known gaps / next steps
 
 - Wire pages to the real Backend API instead of `mockData.ts`.
-- Replace `MapPanel` with a real map SDK once network/API-key access is
-  available, and hydrate pins from real project lat/lng.
 - Add authentication (role-based view scoping per MP / Nodal Authority /
   MoSPI / Agency / Officer) — currently the header always renders a fixed
   demo user.

@@ -97,7 +97,9 @@ This build was authored in a network-restricted sandbox: outbound requests
 to the npm registry and PyPI both returned `403` through the environment's
 proxy (`INTEGRATIONS_ONLY` network mode), so `npm install`, `create-next-app`,
 and `pip install` could not be run here, and neither app could be
-build/smoke-tested in this session. Every frontend and backend file was
+build/smoke-tested in this session. The map deliberately uses key-free tile
+providers (OpenStreetMap + Esri World Imagery) so that no API key or paid
+account is needed to get it rendering on your machine. Every frontend and backend file was
 hand-authored to match what those tools would scaffold, and syntax was
 verified with the TypeScript/Python compilers where possible
 (`tsc`/`py_compile`). **Run `npm install && npm run build` (frontend) and

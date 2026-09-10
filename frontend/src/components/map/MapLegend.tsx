@@ -10,8 +10,9 @@ const statusLegend = [
   { label: "Not Started", color: "bg-purple-500" }
 ];
 
+// NOTE: the risk-heatmap toggle lives on the map panel itself (it drives real
+// Leaflet layers), so it is intentionally not duplicated here.
 const layerToggles = [
-  "Show Heatmap (Risk)",
   "Assembly Boundaries",
   "Ward Boundaries",
   "Major Infrastructure",
@@ -20,7 +21,6 @@ const layerToggles = [
 
 export function MapLegend() {
   const [checked, setChecked] = useState<Record<string, boolean>>({
-    "Show Heatmap (Risk)": true,
     "Assembly Boundaries": true,
     "Ward Boundaries": true,
     "Major Infrastructure": true,

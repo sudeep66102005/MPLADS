@@ -4,7 +4,7 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { Badge } from "@/components/ui/Badge";
 import { CoverageBarChart } from "@/components/charts/CoverageBarChart";
 import { InvestmentTrendChart } from "@/components/charts/InvestmentTrendChart";
-import { MapPanel, type MapPin, type MapArea, type HeatZone } from "@/components/map/MapPanel";
+import { MapPanel } from "@/components/map/MapPanel";
 import {
   Folder,
   IndianRupee,
@@ -27,7 +27,10 @@ import {
   investmentProgressTrend,
   sectorGapAnalysis,
   agencyContribution,
-  wardGaps
+  wardGaps,
+  berasiaMapPins,
+  berasiaHeatZones,
+  BERASIA_CENTRE
 } from "@/lib/mockData";
 
 const gapLevelColor: Record<string, "red" | "amber" | "emerald"> = {
@@ -44,26 +47,6 @@ const sectorIcon: Record<string, React.ComponentType<{ size?: number; className?
   "Community Infrastructure": Building2,
   Education: Building2
 };
-
-const pins: MapPin[] = [
-  { id: "1", x: 50, y: 50, status: "High Risk" },
-  { id: "2", x: 40, y: 35, status: "Delayed" },
-  { id: "3", x: 60, y: 45, status: "In Progress" },
-  { id: "4", x: 35, y: 60, status: "High Risk" },
-  { id: "5", x: 55, y: 65, status: "Completed" }
-];
-
-const areas: MapArea[] = [
-  { id: "a1", x: 30, y: 25, label: "Berasia", size: "md" },
-  { id: "a2", x: 55, y: 30, label: "Neelbad", size: "sm" },
-  { id: "a3", x: 40, y: 55, label: "Huzur", size: "sm" },
-  { id: "a4", x: 62, y: 60, label: "Mandideep", size: "sm" }
-];
-
-const heatZones: HeatZone[] = [
-  { x: 50, y: 50, radius: 90, intensity: "high" },
-  { x: 35, y: 60, radius: 70, intensity: "medium" }
-];
 
 export default function ConstituencyInsightsPage() {
   return (
@@ -154,7 +137,13 @@ export default function ConstituencyInsightsPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Underserved Area (Medium Gap)
             </span>
           </div>
-          <MapPanel pins={pins} areas={areas} heatZones={heatZones} cityLabel="Berasia" scaleLabel="" />
+          <MapPanel
+            center={BERASIA_CENTRE}
+            zoom={11}
+            pins={berasiaMapPins}
+            heatZones={berasiaHeatZones}
+            height={300}
+          />
           <a href="/map" className="link-muted flex justify-end mt-2">
             View Full Map ⤢
           </a>

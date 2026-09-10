@@ -6,6 +6,7 @@ import type {
   SectorGap,
   WardGap
 } from "./types";
+import type { GeoHeatZone, GeoPin } from "@/components/map/types";
 
 // -----------------------------------------------------------------------------
 // Mock data layer.
@@ -582,3 +583,99 @@ export const attentionSummary = {
 };
 
 export const priorityQueueCount = 5;
+
+
+// -----------------------------------------------------------------------------
+// Geographic map data (real WGS84 coordinates)
+//
+// Used by the Leaflet map panels. Previously these were percentage offsets
+// against a fake map image; they are now real lat/lng so they can be fed to
+// any map SDK directly, and so they line up with the `location` field the
+// backend returns per project.
+// -----------------------------------------------------------------------------
+
+
+/** Bengaluru Urban — map centre and project pins. */
+export const BENGALURU_CENTRE: [number, number] = [12.9716, 77.5946];
+
+export const bengaluruMapPins: GeoPin[] = [
+  { id: "1", lat: 13.1007, lng: 77.5963, status: "Completed", label: "Ward Road Resurfacing", sublabel: "Yelahanka", code: "MPLADS/2022/031", aiScore: 21 },
+  { id: "2", lat: 13.0358, lng: 77.5970, status: "In Progress", label: "Storm Water Drain Repair", sublabel: "Hebbal", code: "MPLADS/2023/044", aiScore: 48 },
+  { id: "3", lat: 13.0206, lng: 77.5540, status: "Completed", label: "Community Toilet Block", sublabel: "Yeshwanthpur", code: "MPLADS/2022/058", aiScore: 24 },
+  { id: "4", lat: 13.0108, lng: 77.7025, status: "In Progress", label: "Primary School Extension", sublabel: "KR Puram", code: "MPLADS/2023/077", aiScore: 52 },
+  { id: "5", lat: 12.9698, lng: 77.7500, status: "Delayed", label: "Bus Shelter Construction", sublabel: "Whitefield", code: "MPLADS/2022/094", aiScore: 66 },
+  {
+    id: "6",
+    lat: 12.9352,
+    lng: 77.6245,
+    status: "High Risk",
+    label: "Drainage System Improvement",
+    sublabel: "Ward 149, Koramangala",
+    code: "MPLADS/2023/064",
+    aiScore: 78
+  },
+  { id: "7", lat: 12.9719, lng: 77.6412, status: "In Progress", label: "Park Rejuvenation", sublabel: "Indiranagar", code: "MPLADS/2023/081", aiScore: 44 },
+  { id: "8", lat: 12.9915, lng: 77.5551, status: "Completed", label: "Anganwadi Upgrade", sublabel: "Rajajinagar", code: "MPLADS/2022/012", aiScore: 19 },
+  { id: "9", lat: 12.9250, lng: 77.5468, status: "Delayed", label: "Water Pipeline Extension", sublabel: "Banashankari", code: "MPLADS/2022/066", aiScore: 71 },
+  { id: "10", lat: 12.9308, lng: 77.5838, status: "In Progress", label: "Health Sub-Centre", sublabel: "Jayanagar", code: "MPLADS/2023/103", aiScore: 39 },
+  { id: "11", lat: 12.8452, lng: 77.6602, status: "Not Started", label: "Solar Street Lighting", sublabel: "Electronic City", code: "MPLADS/2024/007", aiScore: 74 },
+  { id: "12", lat: 12.9121, lng: 77.6446, status: "Completed", label: "Footpath Improvement", sublabel: "HSR Layout", code: "MPLADS/2022/089", aiScore: 22 },
+  { id: "13", lat: 12.9081, lng: 77.4830, status: "In Progress", label: "Rural Road Link", sublabel: "Kengeri", code: "MPLADS/2023/052", aiScore: 46 },
+  { id: "14", lat: 12.8605, lng: 77.7845, status: "High Risk", label: "Sanitation Block", sublabel: "Sarjapur", code: "MPLADS/2023/118", aiScore: 81 }
+];
+
+export const bengaluruHeatZones: GeoHeatZone[] = [
+  { id: "h1", lat: 12.9352, lng: 77.6245, radiusMetres: 2600, intensity: "high", label: "Koramangala – drainage risk cluster" },
+  { id: "h2", lat: 12.9250, lng: 77.5468, radiusMetres: 2100, intensity: "medium", label: "Banashankari – water supply delays" },
+  { id: "h3", lat: 12.8605, lng: 77.7845, radiusMetres: 2400, intensity: "high", label: "Sarjapur – sanitation risk cluster" }
+];
+
+/** Bhopal / Madhya Pradesh — map centre and project pins. */
+export const BHOPAL_CENTRE: [number, number] = [23.2599, 77.4126];
+
+export const bhopalMapPins: GeoPin[] = [
+  {
+    id: "1",
+    lat: 23.6295,
+    lng: 77.4325,
+    status: "High Risk",
+    label: "Construction of Community Hall",
+    sublabel: "Berasia, Bhopal",
+    code: "MPLADS/2023/001",
+    aiScore: 32
+  },
+  { id: "2", lat: 23.2010, lng: 77.4500, status: "Delayed", label: "Rural Road Development", sublabel: "Huzur, Bhopal", code: "MPLADS/2023/014", aiScore: 45 },
+  { id: "3", lat: 23.2820, lng: 77.3010, status: "In Progress", label: "Drinking Water Facility", sublabel: "Phanda, Bhopal", code: "MPLADS/2022/087", aiScore: 61 },
+  { id: "4", lat: 23.2790, lng: 77.3402, status: "In Progress", label: "School Building Renovation", sublabel: "Bairagarh, Bhopal", code: "MPLADS/2023/102", aiScore: 64 },
+  { id: "5", lat: 23.1620, lng: 77.4405, status: "Completed", label: "Primary Health Centre", sublabel: "Kolar, Bhopal", code: "MPLADS/2023/076", aiScore: 18 },
+  { id: "6", lat: 23.1805, lng: 77.4720, status: "Delayed", label: "Solar Street Lighting", sublabel: "Misrod, Bhopal", code: "MPLADS/2022/091", aiScore: 78 },
+  { id: "7", lat: 23.1590, lng: 77.3610, status: "Delayed", label: "Drainage System Improvement", sublabel: "Neelbad, Bhopal", code: "MPLADS/2022/063", aiScore: 71 },
+  { id: "8", lat: 23.1902, lng: 77.4512, status: "In Progress", label: "Anganwadi Centre Construction", sublabel: "Bagmugaliya, Bhopal", code: "MPLADS/2023/118", aiScore: 56 },
+  { id: "9", lat: 23.2905, lng: 77.4508, status: "In Progress", label: "Park Development", sublabel: "Ayodhya Bypass, Bhopal", code: "MPLADS/2022/045", aiScore: 49 },
+  { id: "10", lat: 23.1010, lng: 77.5325, status: "Not Started", label: "Minor Bridge Construction", sublabel: "Mandideep, Raisen", code: "MPLADS/2023/129", aiScore: 82 },
+  { id: "11", lat: 23.2455, lng: 77.3905, status: "Completed", label: "Library Building", sublabel: "Bhopal city", code: "MPLADS/2022/021", aiScore: 20 },
+  { id: "12", lat: 23.3210, lng: 77.4210, status: "High Risk", label: "Rural Water Tank", sublabel: "Berasia block", code: "MPLADS/2023/136", aiScore: 84 }
+];
+
+export const bhopalHeatZones: GeoHeatZone[] = [
+  { id: "h1", lat: 23.6295, lng: 77.4325, radiusMetres: 6000, intensity: "high", label: "Berasia – major risk hotspot" },
+  { id: "h2", lat: 23.1805, lng: 77.4720, radiusMetres: 4200, intensity: "high", label: "Misrod – major risk hotspot" },
+  { id: "h3", lat: 23.1590, lng: 77.3610, radiusMetres: 3800, intensity: "medium", label: "Neelbad – delay cluster" }
+];
+
+/** Berasia constituency view (Constituency Insights page). */
+export const BERASIA_CENTRE: [number, number] = [23.6295, 77.4325];
+
+export const berasiaMapPins: GeoPin[] = [
+  { id: "1", lat: 23.6295, lng: 77.4325, status: "High Risk", label: "Construction of Community Hall", sublabel: "Berasia", code: "MPLADS/2023/001", aiScore: 32 },
+  { id: "2", lat: 23.6602, lng: 77.4010, status: "Delayed", label: "Kheda Water Supply", sublabel: "Kheda, Berasia", code: "MPLADS/2023/141", aiScore: 68 },
+  { id: "3", lat: 23.5905, lng: 77.4680, status: "In Progress", label: "Sanchi Road Health Post", sublabel: "Sanchi Road, Berasia", code: "MPLADS/2023/149", aiScore: 54 },
+  { id: "4", lat: 23.6105, lng: 77.3820, status: "High Risk", label: "Barkheda Sanitation Works", sublabel: "Barkheda, Berasia", code: "MPLADS/2022/077", aiScore: 76 },
+  { id: "5", lat: 23.6510, lng: 77.4605, status: "Completed", label: "Ratibad School Block", sublabel: "Ratibad, Berasia", code: "MPLADS/2022/034", aiScore: 23 }
+];
+
+export const berasiaHeatZones: GeoHeatZone[] = [
+  { id: "h1", lat: 23.6602, lng: 77.4010, radiusMetres: 3200, intensity: "high", label: "Kheda – high drinking water gap" },
+  { id: "h2", lat: 23.6105, lng: 77.3820, radiusMetres: 2600, intensity: "high", label: "Barkheda – high sanitation gap" },
+  { id: "h3", lat: 23.5905, lng: 77.4680, radiusMetres: 2400, intensity: "medium", label: "Sanchi Road – healthcare gap" }
+];

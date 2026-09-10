@@ -2,7 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, ExportButton } from "@/components/ui/PageHeader";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPanel, type MapPin, type HeatZone, type MapArea } from "@/components/map/MapPanel";
+import { MapPanel } from "@/components/map/MapPanel";
 import { MapLegend } from "@/components/map/MapLegend";
 import { SectorPieChart } from "@/components/charts/SectorPieChart";
 import { ProjectTrendChart } from "@/components/charts/ProjectTrendChart";
@@ -27,50 +27,11 @@ import {
   bengaluruSectorDistribution,
   bengaluruSelectedLocation,
   bengaluruTopIssues,
-  bengaluruUnderservedWards
+  bengaluruUnderservedWards,
+  bengaluruMapPins,
+  bengaluruHeatZones,
+  BENGALURU_CENTRE
 } from "@/lib/mockData";
-
-const pins: MapPin[] = [
-  { id: "1", x: 22, y: 20, status: "Completed" },
-  { id: "2", x: 30, y: 15, status: "In Progress" },
-  { id: "3", x: 40, y: 25, status: "Completed" },
-  { id: "4", x: 55, y: 18, status: "In Progress" },
-  { id: "5", x: 65, y: 22, status: "Delayed" },
-  { id: "6", x: 48, y: 40, status: "High Risk", label: "Drainage System Improvement" },
-  { id: "7", x: 60, y: 45, status: "In Progress" },
-  { id: "8", x: 35, y: 55, status: "Completed" },
-  { id: "9", x: 28, y: 68, status: "Delayed" },
-  { id: "10", x: 45, y: 72, status: "In Progress" },
-  { id: "11", x: 58, y: 65, status: "Not Started" },
-  { id: "12", x: 68, y: 55, status: "Completed" },
-  { id: "13", x: 20, y: 45, status: "In Progress" },
-  { id: "14", x: 72, y: 35, status: "High Risk" }
-];
-
-const areas: MapArea[] = [
-  { id: "a1", x: 15, y: 12, label: "Yelahanka", size: "sm" },
-  { id: "a2", x: 8, y: 22, label: "Nelamangala", size: "sm" },
-  { id: "a3", x: 62, y: 12, label: "Hoskote", size: "sm" },
-  { id: "a4", x: 30, y: 30, label: "Yeshwanthpur", size: "sm" },
-  { id: "a5", x: 46, y: 30, label: "Hebbal", size: "sm" },
-  { id: "a6", x: 58, y: 32, label: "KR Puram", size: "sm" },
-  { id: "a7", x: 70, y: 28, label: "Whitefield", size: "sm" },
-  { id: "a8", x: 22, y: 52, label: "Rajajinagar", size: "sm" },
-  { id: "a9", x: 40, y: 55, label: "Indiranagar", size: "sm" },
-  { id: "a10", x: 22, y: 68, label: "Banashankari", size: "sm" },
-  { id: "a11", x: 40, y: 72, label: "Jayanagar", size: "sm" },
-  { id: "a12", x: 60, y: 78, label: "Electronic City", size: "sm" },
-  { id: "a13", x: 15, y: 82, label: "Kengeri", size: "sm" },
-  { id: "a14", x: 72, y: 70, label: "Sarjapur", size: "sm" },
-  { id: "a15", x: 30, y: 88, label: "Bannerghatta National Park", size: "sm" },
-  { id: "a16", x: 70, y: 90, label: "Anekal", size: "sm" }
-];
-
-const heatZones: HeatZone[] = [
-  { x: 48, y: 40, radius: 90, intensity: "high" },
-  { x: 40, y: 55, radius: 70, intensity: "medium" },
-  { x: 60, y: 45, radius: 60, intensity: "medium" }
-];
 
 const toneIcon = {
   positive: CheckCircle2,
@@ -189,12 +150,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-[110px_1fr] gap-3">
           <MapLegend />
           <MapPanel
-            pins={pins}
-            areas={areas}
-            heatZones={heatZones}
+            center={BENGALURU_CENTRE}
+            zoom={11}
+            pins={bengaluruMapPins}
+            heatZones={bengaluruHeatZones}
             activePinId="6"
-            cityLabel="Bengaluru"
-            roads={[{ label: "NH 75", x: 46, y: 6 }, { label: "NH 44", x: 20, y: 8 }, { label: "NH 275", x: 44, y: 84 }]}
           />
         </div>
 

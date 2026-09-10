@@ -2,7 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, ExportButton } from "@/components/ui/PageHeader";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPanel, type MapPin, type MapArea, type HeatZone } from "@/components/map/MapPanel";
+import { MapPanel } from "@/components/map/MapPanel";
 import {
   Folder,
   AlertTriangle,
@@ -23,45 +23,12 @@ import {
   bhopalProjectDensity,
   bhopalRiskHotspots,
   bhopalSelectedProject,
-  bhopalUnderservedAreas
+  bhopalUnderservedAreas,
+  bhopalMapPins,
+  bhopalHeatZones,
+  BHOPAL_CENTRE
 } from "@/lib/mockData";
 import { riskBadgeColor } from "@/components/ui/Badge";
-
-const pins: MapPin[] = [
-  { id: "1", x: 50, y: 50, status: "High Risk", label: bhopalSelectedProject.name },
-  { id: "2", x: 40, y: 30, status: "In Progress" },
-  { id: "3", x: 60, y: 25, status: "Completed" },
-  { id: "4", x: 30, y: 45, status: "Delayed" },
-  { id: "5", x: 65, y: 55, status: "In Progress" },
-  { id: "6", x: 45, y: 65, status: "High Risk" },
-  { id: "7", x: 55, y: 70, status: "Completed" },
-  { id: "8", x: 25, y: 60, status: "Not Started" },
-  { id: "9", x: 70, y: 40, status: "Delayed" },
-  { id: "10", x: 35, y: 20, status: "In Progress" },
-  { id: "11", x: 58, y: 62, status: "High Risk" },
-  { id: "12", x: 48, y: 38, status: "Delayed" }
-];
-
-const areas: MapArea[] = [
-  { id: "a1", x: 20, y: 10, label: "To Sanchi", size: "sm" },
-  { id: "a2", x: 12, y: 35, label: "Vidisha", size: "sm" },
-  { id: "a3", x: 78, y: 15, label: "To Vidisha", size: "sm" },
-  { id: "a4", x: 62, y: 20, label: "Berasia", size: "md" },
-  { id: "a5", x: 15, y: 55, label: "Sehore", size: "sm" },
-  { id: "a6", x: 30, y: 68, label: "Bairagarh", size: "sm" },
-  { id: "a7", x: 45, y: 78, label: "Huzur", size: "sm" },
-  { id: "a8", x: 62, y: 72, label: "Misrod", size: "sm" },
-  { id: "a9", x: 78, y: 60, label: "Mandideep", size: "sm" },
-  { id: "a10", x: 70, y: 82, label: "Raisen", size: "sm" },
-  { id: "a11", x: 15, y: 78, label: "To Sehore", size: "sm" },
-  { id: "a12", x: 82, y: 78, label: "To Raisen", size: "sm" }
-];
-
-const heatZones: HeatZone[] = [
-  { x: 50, y: 50, radius: 100, intensity: "high" },
-  { x: 45, y: 65, radius: 80, intensity: "high" },
-  { x: 30, y: 45, radius: 60, intensity: "medium" }
-];
 
 export default function MapViewPage() {
   return (
@@ -148,26 +115,15 @@ export default function MapViewPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 mb-4">
         <div className="relative">
+          {/* Project details now surface through real Leaflet popups anchored
+              to each pin — click a marker on the map. */}
           <MapPanel
-            pins={pins}
-            areas={areas}
-            heatZones={heatZones}
+            center={BHOPAL_CENTRE}
+            zoom={10}
+            pins={bhopalMapPins}
+            heatZones={bhopalHeatZones}
             activePinId="1"
-            cityLabel="Bhopal"
-            scaleLabel="0    10    20    40 km"
           />
-          {/* Selected project popup, overlaid roughly where the pin sits */}
-          <div className="absolute left-[38%] top-[38%] w-64 card p-3 shadow-lg z-30 hidden xl:block">
-            <p className="text-xs font-semibold text-slate-800">{bhopalSelectedProject.name}</p>
-            <p className="text-[11px] text-slate-500 mb-1">
-              {bhopalSelectedProject.constituency.split(",")[0]}, Bhopal
-            </p>
-            <p className="text-[10px] text-slate-400 mb-2">{bhopalSelectedProject.code}</p>
-            <div className="flex items-center gap-1.5">
-              <Badge color="red">High Risk</Badge>
-              <span className="text-[11px] text-slate-500">AI Score: {bhopalSelectedProject.aiScore}</span>
-            </div>
-          </div>
         </div>
 
         <div className="space-y-3">
