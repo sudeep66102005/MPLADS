@@ -9,7 +9,8 @@ interface KpiCardProps {
   value: string;
   subValue?: string;
   subValueColor?: string;
-  trend?: string;
+  /** When true, renders an upward-trend arrow beside `subValue`. */
+  trend?: boolean;
 }
 
 export function KpiCard({
