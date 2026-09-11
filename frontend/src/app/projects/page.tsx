@@ -195,7 +195,7 @@ export default function ProjectsPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-slate-100">
           <label className="text-xs text-slate-500 flex items-center gap-1.5">
             Show
             <select className="border border-slate-200 rounded-md px-1.5 py-0.5 text-xs">
@@ -205,7 +205,7 @@ export default function ProjectsPage() {
             </select>
             entries
           </label>
-          <div className="flex items-center gap-1 text-xs">
+          <div className="flex items-center gap-1 text-xs overflow-x-auto">
             <button className="px-2 py-1 rounded border border-slate-200 text-slate-400">‹</button>
             <button className="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold">1</button>
             {[2, 3, 4, 5].map((n) => (

@@ -1,18 +1,24 @@
 "use client";
 
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, Menu } from "lucide-react";
 import { currentUser } from "@/lib/mockData";
 import { Emblem } from "./Emblem";
 
+interface HeaderProps {
+  /** Opens the mobile navigation drawer. Only relevant below the lg breakpoint. */
+  onMenuClick?: () => void;
+}
+
 /**
  * Full-width top bar. The brand lockup occupies the left column so it lines up
- * with the sidebar beneath it (both share the same navy surface, reading as one
- * continuous panel).
+ * with the sidebar beneath it on desktop (both share the same navy surface,
+ * reading as one continuous panel). Below the lg breakpoint the sidebar is
+ * replaced by a slide-in drawer, opened via the hamburger button here.
  */
-export function Header() {
+export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="fixed top-0 inset-x-0 z-40 h-[54px] bg-navy-950 flex items-stretch">
-      {/* Brand lockup — width matches the sidebar */}
+      {/* Brand lockup — width matches the sidebar (desktop only) */}
       <div className="hidden lg:flex w-64 shrink-0 items-center gap-2.5 px-4">
         <Emblem size={30} />
         <div className="leading-none">
@@ -22,10 +28,21 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center gap-3 px-4 lg:px-6 min-w-0">
-        <div className="lg:hidden flex items-center gap-2">
-          <Emblem size={24} />
-          <span className="text-sm font-bold text-white">MPLADS</span>
+      <div className="flex-1 flex items-center gap-2 sm:gap-3 px-2.5 sm:px-4 lg:px-6 min-w-0">
+        {/* Hamburger — opens the mobile nav drawer, hidden on desktop where
+            the fixed sidebar is always visible. */}
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          className="lg:hidden shrink-0 p-1.5 -ml-1 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="lg:hidden flex items-center gap-1.5 shrink-0">
+          <Emblem size={22} />
+          <span className="text-[13px] font-bold text-white">MPLADS</span>
         </div>
 
         {/* Search — centered in the remaining space */}
@@ -44,7 +61,7 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3.5 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
           <button aria-label="Notifications" className="relative text-slate-300 hover:text-white">
             <Bell size={17} />
             <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-[15px] h-[15px] flex items-center justify-center">

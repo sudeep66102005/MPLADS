@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,6 +15,7 @@ import {
   BellRing,
   MessageSquareText,
   Settings,
+  X,
   type LucideIcon
 } from "lucide-react";
 import { classNames } from "@/lib/format";
@@ -40,11 +42,15 @@ const navItems: NavItem[] = [
   { href: "/feedback", label: "Feedback", icon: MessageSquareText }
 ];
 
-export function Sidebar() {
+/**
+ * The nav link list, shared between the fixed desktop sidebar and the mobile
+ * drawer so the two never drift out of sync.
+ */
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:fixed lg:top-[54px] lg:bottom-0 lg:w-64 bg-navy-950 text-slate-300">
+    <>
       <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-0.5">
         {navItems.map((item) => {
           const active = pathname === item.href;
@@ -53,6 +59,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={classNames(
                 "flex items-center justify-between gap-2 rounded-lg px-3 py-[9px] text-[12.5px] transition-colors",
@@ -78,6 +85,7 @@ export function Sidebar() {
       <div className="px-2.5 pb-2">
         <Link
           href="/settings"
+          onClick={onNavigate}
           aria-current={pathname === "/settings" ? "page" : undefined}
           className={classNames(
             "flex items-center gap-3 rounded-lg px-3 py-[9px] text-[12.5px] transition-colors",
@@ -103,6 +111,70 @@ export function Sidebar() {
           <p className="text-[8.5px] text-slate-500 mt-0.5">Government of India</p>
         </div>
       </div>
-    </aside>
+    </>
+  );
+}
+
+interface SidebarProps {
+  /** Whether the mobile drawer is open. Ignored by the desktop sidebar, which
+   * is always visible at the lg breakpoint and above. */
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  // Let Escape close the drawer, same as clicking the backdrop or the X button.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
+  return (
+    <>
+      {/* Desktop: fixed sidebar, always visible at lg+ */}
+      <aside className="hidden lg:flex lg:flex-col lg:fixed lg:top-[54px] lg:bottom-0 lg:w-64 bg-navy-950 text-slate-300">
+        <SidebarNav />
+      </aside>
+
+      {/* Mobile: backdrop + slide-in drawer, lg and up never render this */}
+      <div
+        aria-hidden="true"
+        onClick={onClose}
+        className={classNames(
+          "fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-200",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className={classNames(
+          "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-navy-950 text-slate-300 flex flex-col lg:hidden",
+          "transform transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="h-[54px] shrink-0 flex items-center justify-between px-4 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Emblem size={24} />
+            <span className="text-sm font-bold text-white">MPLADS</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation menu"
+            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <SidebarNav onNavigate={onClose} />
+      </aside>
+    </>
   );
 }

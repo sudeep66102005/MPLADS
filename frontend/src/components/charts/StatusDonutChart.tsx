@@ -9,7 +9,7 @@ interface StatusDonutChartProps {
 
 export function StatusDonutChart({ data, total }: StatusDonutChartProps) {
   return (
-    <div className="relative w-[168px] h-[168px] shrink-0">
+    <div className="relative w-[168px] h-[168px] shrink-0 mx-auto sm:mx-0">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

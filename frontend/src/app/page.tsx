@@ -42,15 +42,15 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
           <button className="hidden sm:inline-flex items-center gap-1.5 text-[11.5px] text-slate-500 hover:text-slate-700">
             Last updated: {dashboardMeta.lastUpdated}
             <ArrowRight size={12} />
           </button>
-          <button className="inline-flex items-center gap-2 text-[12px] font-medium border border-slate-200 bg-white rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50">
-            <Calendar size={14} className="text-slate-400" />
-            {dashboardMeta.dateRange}
-            <ChevronDown size={14} className="text-slate-400" />
+          <button className="inline-flex items-center gap-2 text-[12px] font-medium border border-slate-200 bg-white rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-50 w-full md:w-auto justify-center">
+            <Calendar size={14} className="text-slate-400 shrink-0" />
+            <span className="truncate">{dashboardMeta.dateRange}</span>
+            <ChevronDown size={14} className="text-slate-400 shrink-0" />
           </button>
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function DashboardPage() {
         {/* Project Distribution (Status) */}
         <section className="card p-4">
           <h2 className="text-sm font-bold text-slate-800 mb-2">Project Distribution (Status)</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
             <StatusDonutChart data={statusDistribution} total={dashboardKpis.totalProjects.value} />
-            <ul className="space-y-2.5 min-w-0 flex-1">
+            <ul className="space-y-2.5 min-w-0 w-full flex-1">
               {statusDistribution.map((status) => (
                 <li key={status.label} className="flex items-center gap-2 text-[11.5px]">
                   <span
@@ -141,7 +141,7 @@ export default function DashboardPage() {
 
         {/* Fund Utilization Trend */}
         <section className="card p-4">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex flex-wrap items-center justify-between gap-y-1 mb-1">
             <h2 className="text-sm font-bold text-slate-800">Fund Utilization Trend</h2>
             <div className="flex items-center gap-3 text-[10px]">
               <span className="flex items-center gap-1.5 text-slate-500">

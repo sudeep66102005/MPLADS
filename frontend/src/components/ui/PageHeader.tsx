@@ -34,10 +34,10 @@ export function PageHeader({ breadcrumbs, title, subtitle, right }: PageHeaderPr
             ))}
           </div>
         ) : null}
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{title}</h1>
         {subtitle ? <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p> : null}
       </div>
-      {right ? <div className="flex items-center gap-2">{right}</div> : null}
+      {right ? <div className="flex flex-wrap items-center gap-2">{right}</div> : null}
     </div>
   );
 }
