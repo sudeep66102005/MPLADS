@@ -7,18 +7,18 @@ import {
   ListChecks,
   AlertTriangle,
   MapPin,
-  Building2,
+  BarChart3,
   Landmark,
   FolderClock,
   FileBarChart2,
   BellRing,
   MessageSquareText,
   Settings,
-  ShieldCheck,
   type LucideIcon
 } from "lucide-react";
 import { classNames } from "@/lib/format";
 import { priorityQueueCount } from "@/lib/mockData";
+import { Emblem } from "./Emblem";
 
 interface NavItem {
   href: string;
@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
   { href: "/projects", label: "Projects", icon: ListChecks },
   { href: "/priority-queue", label: "AI Priority Queue", icon: AlertTriangle, badge: priorityQueueCount },
   { href: "/map", label: "Map View", icon: MapPin },
-  { href: "/agency-performance", label: "Agency Performance", icon: Building2 },
+  { href: "/agency-performance", label: "Agency Performance", icon: BarChart3 },
   { href: "/constituency-insights", label: "Constituency Insights", icon: Landmark },
   { href: "/inspection-dossiers", label: "Inspection Dossiers", icon: FolderClock },
   { href: "/reports", label: "Reports", icon: FileBarChart2 },
@@ -44,16 +44,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-navy-950 text-slate-200">
-      <div className="flex items-center gap-2 px-5 h-16 border-b border-white/10">
-        <ShieldCheck size={26} className="text-emerald-400" />
-        <div>
-          <p className="text-sm font-bold text-white leading-tight">MPLADS</p>
-          <p className="text-[10px] text-slate-400 leading-tight">AI Monitoring &amp; Audit Intelligence</p>
-        </div>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
+    <aside className="hidden lg:flex lg:flex-col lg:fixed lg:top-[54px] lg:bottom-0 lg:w-64 bg-navy-950 text-slate-300">
+      <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-0.5">
         {navItems.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
@@ -61,19 +53,20 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={classNames(
-                "flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center justify-between gap-2 rounded-lg px-3 py-[9px] text-[12.5px] transition-colors",
                 active
-                  ? "bg-blue-600/90 text-white"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  ? "bg-blue-600 text-white font-semibold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white font-medium"
               )}
             >
-              <span className="flex items-center gap-3">
-                <Icon size={17} />
-                {item.label}
+              <span className="flex items-center gap-3 min-w-0">
+                <Icon size={16} className="shrink-0" />
+                <span className="truncate">{item.label}</span>
               </span>
               {item.badge ? (
-                <span className="text-[11px] font-semibold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                <span className="text-[9.5px] font-bold bg-red-500 text-white rounded-full min-w-[17px] h-[17px] px-1 flex items-center justify-center shrink-0">
                   {item.badge}
                 </span>
               ) : null}
@@ -82,17 +75,33 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-2 pb-4">
+      <div className="px-2.5 pb-2">
         <Link
           href="/settings"
+          aria-current={pathname === "/settings" ? "page" : undefined}
           className={classNames(
-            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === "/settings" ? "bg-blue-600/90 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"
+            "flex items-center gap-3 rounded-lg px-3 py-[9px] text-[12.5px] transition-colors",
+            pathname === "/settings"
+              ? "bg-blue-600 text-white font-semibold"
+              : "text-slate-300 hover:bg-white/5 hover:text-white font-medium"
           )}
         >
-          <Settings size={17} />
+          <Settings size={16} />
           Settings
         </Link>
+      </div>
+
+      {/* Ministry attribution footer */}
+      <div className="border-t border-white/10 px-4 py-3 flex items-start gap-2.5">
+        <Emblem size={26} />
+        <div className="leading-tight min-w-0">
+          <p className="text-[10.5px] font-semibold text-slate-200">MPLADS</p>
+          <p className="text-[8.5px] text-slate-500">
+            Ministry of Statistics &amp;<br />
+            Programme Implementation
+          </p>
+          <p className="text-[8.5px] text-slate-500 mt-0.5">Government of India</p>
+        </div>
       </div>
     </aside>
   );

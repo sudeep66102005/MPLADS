@@ -13,9 +13,9 @@ import type { GeoHeatZone, GeoPin } from "@/components/map/types";
 //
 // This stands in for the real Backend API (Python / FastAPI + PostgreSQL/PostGIS)
 // described in the system architecture. All numbers below are illustrative and
-// were chosen to match the reference dashboard mockups (Bengaluru Urban and
-// Bhopal / Madhya Pradesh views) so the UI can be built and demoed without a
-// live backend. Swap `src/lib/api.ts` to call real endpoints once the backend
+// were chosen to match the reference dashboard mockups (Bhopal / Madhya Pradesh
+// constituency) so the UI can be built and demoed without a live backend.
+// Swap `src/lib/api.ts` to call real endpoints once the backend
 // (see /backend) is available.
 // -----------------------------------------------------------------------------
 
@@ -32,76 +32,9 @@ export interface RegionOption {
 }
 
 export const regionOptions: RegionOption[] = [
-  { id: "bengaluru-urban", label: "Bengaluru Urban, Karnataka", state: "Karnataka" },
-  { id: "bhopal-mp", label: "Bhopal, Madhya Pradesh", state: "Madhya Pradesh" }
+  { id: "bhopal-mp", label: "Bhopal, Madhya Pradesh", state: "Madhya Pradesh" },
+  { id: "berasia", label: "Berasia (Bhopal, MP)", state: "Madhya Pradesh" }
 ];
-
-// ---- Bengaluru Urban dataset ------------------------------------------------
-
-export const bengaluruKpis = {
-  totalProjects: 96,
-  totalProjectsYoY: 8,
-  highRisk: 14,
-  highRiskPct: 14.6,
-  delayed: 18,
-  delayedPct: 18.8,
-  totalAllocationCr: 186.4,
-  fundUtilizationPct: 76,
-  developmentGaps: 5
-};
-
-export const bengaluruSectorDistribution = [
-  { sector: "Roads & Transport", value: 24, pct: 25, color: "#1e4fd6" },
-  { sector: "Drinking Water", value: 18, pct: 19, color: "#22b8b0" },
-  { sector: "Sanitation", value: 16, pct: 17, color: "#f2b705" },
-  { sector: "Healthcare", value: 14, pct: 15, color: "#e05353" },
-  { sector: "Education", value: 12, pct: 13, color: "#7c5cd6" },
-  { sector: "Community Infrastructure", value: 8, pct: 8, color: "#5db35c" },
-  { sector: "Others", value: 4, pct: 4, color: "#9aa4b8" }
-];
-
-export const bengaluruProjectTrend: ConstituencyTrendPoint[] = [
-  { year: "2021", fundsReleasedCr: 0, expenditureCr: 0, avgPhysicalProgressPct: 0, projects: 18, cumulativeAllocationCr: 42 },
-  { year: "2022", fundsReleasedCr: 0, expenditureCr: 0, avgPhysicalProgressPct: 0, projects: 28, cumulativeAllocationCr: 88 },
-  { year: "2023", fundsReleasedCr: 0, expenditureCr: 0, avgPhysicalProgressPct: 0, projects: 28, cumulativeAllocationCr: 138 },
-  { year: "2024", fundsReleasedCr: 0, expenditureCr: 0, avgPhysicalProgressPct: 0, projects: 38, cumulativeAllocationCr: 186 }
-];
-
-export const bengaluruTopIssues = [
-  { id: "1", title: "Drainage & Sanitation", meta: "28 projects | 38% delay risk", severity: "High" as const },
-  { id: "2", title: "Healthcare Infrastructure", meta: "16 projects | 25% underserved", severity: "Medium" as const },
-  { id: "3", title: "Road Connectivity", meta: "14 projects | High cost variation", severity: "Medium" as const },
-  { id: "4", title: "Education Facilities", meta: "12 projects | Low coverage in urban slums", severity: "Low" as const }
-];
-
-export const bengaluruUnderservedWards = [
-  { rank: 1, area: "East Bengaluru (Ward 150-160)", note: "Low infrastructure coverage" },
-  { rank: 2, area: "South Bengaluru (Ward 160-180)", note: "Need more sanitation projects" },
-  { rank: 3, area: "West Bengaluru (Ward 60-75)", note: "Low drinking water project coverage" }
-];
-
-export const bengaluruAiInsights = [
-  { id: "1", tone: "positive" as const, text: "Bengaluru shows good fund utilization (76%) but 18 projects are likely to be delayed." },
-  { id: "2", tone: "warning" as const, text: "Sanitation and drainage projects have highest risk." },
-  { id: "3", tone: "warning" as const, text: "3 urban wards have no MPLADS projects yet." },
-  { id: "4", tone: "info" as const, text: "Consider focusing on healthcare and drinking water in East Bengaluru." }
-];
-
-export const bengaluruSelectedLocation = {
-  name: "Bengaluru Urban",
-  state: "Karnataka",
-  totalProjects: 96,
-  totalAllocationCr: 186.4,
-  fundUtilizationPct: 76
-};
-
-export const bengaluruSelectedProjectPin = {
-  name: "Drainage System Improvement",
-  location: "Ward 149, Koramangala",
-  code: "MPLADS/2023/064",
-  status: "High Risk" as const,
-  aiScore: 78
-};
 
 // ---- Bhopal, Madhya Pradesh dataset -----------------------------------------
 
@@ -595,41 +528,6 @@ export const priorityQueueCount = 5;
 // -----------------------------------------------------------------------------
 
 
-/** Bengaluru Urban — map centre and project pins. */
-export const BENGALURU_CENTRE: [number, number] = [12.9716, 77.5946];
-
-export const bengaluruMapPins: GeoPin[] = [
-  { id: "1", lat: 13.1007, lng: 77.5963, status: "Completed", label: "Ward Road Resurfacing", sublabel: "Yelahanka", code: "MPLADS/2022/031", aiScore: 21 },
-  { id: "2", lat: 13.0358, lng: 77.5970, status: "In Progress", label: "Storm Water Drain Repair", sublabel: "Hebbal", code: "MPLADS/2023/044", aiScore: 48 },
-  { id: "3", lat: 13.0206, lng: 77.5540, status: "Completed", label: "Community Toilet Block", sublabel: "Yeshwanthpur", code: "MPLADS/2022/058", aiScore: 24 },
-  { id: "4", lat: 13.0108, lng: 77.7025, status: "In Progress", label: "Primary School Extension", sublabel: "KR Puram", code: "MPLADS/2023/077", aiScore: 52 },
-  { id: "5", lat: 12.9698, lng: 77.7500, status: "Delayed", label: "Bus Shelter Construction", sublabel: "Whitefield", code: "MPLADS/2022/094", aiScore: 66 },
-  {
-    id: "6",
-    lat: 12.9352,
-    lng: 77.6245,
-    status: "High Risk",
-    label: "Drainage System Improvement",
-    sublabel: "Ward 149, Koramangala",
-    code: "MPLADS/2023/064",
-    aiScore: 78
-  },
-  { id: "7", lat: 12.9719, lng: 77.6412, status: "In Progress", label: "Park Rejuvenation", sublabel: "Indiranagar", code: "MPLADS/2023/081", aiScore: 44 },
-  { id: "8", lat: 12.9915, lng: 77.5551, status: "Completed", label: "Anganwadi Upgrade", sublabel: "Rajajinagar", code: "MPLADS/2022/012", aiScore: 19 },
-  { id: "9", lat: 12.9250, lng: 77.5468, status: "Delayed", label: "Water Pipeline Extension", sublabel: "Banashankari", code: "MPLADS/2022/066", aiScore: 71 },
-  { id: "10", lat: 12.9308, lng: 77.5838, status: "In Progress", label: "Health Sub-Centre", sublabel: "Jayanagar", code: "MPLADS/2023/103", aiScore: 39 },
-  { id: "11", lat: 12.8452, lng: 77.6602, status: "Not Started", label: "Solar Street Lighting", sublabel: "Electronic City", code: "MPLADS/2024/007", aiScore: 74 },
-  { id: "12", lat: 12.9121, lng: 77.6446, status: "Completed", label: "Footpath Improvement", sublabel: "HSR Layout", code: "MPLADS/2022/089", aiScore: 22 },
-  { id: "13", lat: 12.9081, lng: 77.4830, status: "In Progress", label: "Rural Road Link", sublabel: "Kengeri", code: "MPLADS/2023/052", aiScore: 46 },
-  { id: "14", lat: 12.8605, lng: 77.7845, status: "High Risk", label: "Sanitation Block", sublabel: "Sarjapur", code: "MPLADS/2023/118", aiScore: 81 }
-];
-
-export const bengaluruHeatZones: GeoHeatZone[] = [
-  { id: "h1", lat: 12.9352, lng: 77.6245, radiusMetres: 2600, intensity: "high", label: "Koramangala – drainage risk cluster" },
-  { id: "h2", lat: 12.9250, lng: 77.5468, radiusMetres: 2100, intensity: "medium", label: "Banashankari – water supply delays" },
-  { id: "h3", lat: 12.8605, lng: 77.7845, radiusMetres: 2400, intensity: "high", label: "Sarjapur – sanitation risk cluster" }
-];
-
 /** Bhopal / Madhya Pradesh — map centre and project pins. */
 export const BHOPAL_CENTRE: [number, number] = [23.2599, 77.4126];
 
@@ -679,3 +577,145 @@ export const berasiaHeatZones: GeoHeatZone[] = [
   { id: "h2", lat: 23.6105, lng: 77.3820, radiusMetres: 2600, intensity: "high", label: "Barkheda – high sanitation gap" },
   { id: "h3", lat: 23.5905, lng: 77.4680, radiusMetres: 2400, intensity: "medium", label: "Sanchi Road – healthcare gap" }
 ];
+
+
+// -----------------------------------------------------------------------------
+// Dashboard home screen ("Welcome, <MP>") data
+// -----------------------------------------------------------------------------
+
+export const dashboardMeta = {
+  lastUpdated: "14 Dec 2024, 10:45 AM",
+  dateRange: "Apr 2021 – Dec 2024"
+};
+
+export const dashboardKpis = {
+  totalProjects: { value: 182, deltaPct: 12 },
+  completed: { value: 94, deltaPct: 8 },
+  delayed: { value: 21, deltaPct: 40 },
+  needsAttention: { value: 12, deltaPct: 20 },
+  totalAllocatedCr: 342.5,
+  utilizedPct: 78
+};
+
+export const statusDistribution = [
+  { label: "Completed", value: 94, pct: 51.6, color: "#22c55e" },
+  { label: "In Progress", value: 55, pct: 30.2, color: "#3b82f6" },
+  { label: "Delayed", value: 21, pct: 11.5, color: "#ef4444" },
+  { label: "Not Started", value: 12, pct: 6.6, color: "#f59e0b" }
+];
+
+/**
+ * Replaces the map panel on the dashboard: same "where are the projects"
+ * question, answered as a block-wise status breakdown instead of pins.
+ * Counts reconcile exactly with `statusDistribution` and the 182 total.
+ */
+export const blockBreakdown = [
+  { block: "Berasia", total: 42, completed: 22, inProgress: 12, delayed: 6, notStarted: 2 },
+  { block: "Huzur", total: 38, completed: 20, inProgress: 11, delayed: 5, notStarted: 2 },
+  { block: "Phanda", total: 31, completed: 16, inProgress: 10, delayed: 3, notStarted: 2 },
+  { block: "Bairagarh", total: 26, completed: 14, inProgress: 8, delayed: 3, notStarted: 1 },
+  { block: "Kolar", total: 24, completed: 13, inProgress: 7, delayed: 2, notStarted: 2 },
+  { block: "Misrod", total: 21, completed: 9, inProgress: 7, delayed: 2, notStarted: 3 }
+];
+
+export const fundUtilizationTrend = [
+  { year: "2021", allocated: 52, utilized: 38 },
+  { year: "2022", allocated: 148, utilized: 118 },
+  { year: "2023", allocated: 248, utilized: 196 },
+  { year: "2024", allocated: 342.5, utilized: 267.8 }
+];
+
+/**
+ * NOTE: these are HEALTH scores (0-100, higher = healthier), so severity runs
+ * inversely to the number: 32/100 is CRITICAL, 78/100 is LOW risk.
+ */
+export type QueueSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export const dashboardPriorityQueue: {
+  id: string;
+  severity: QueueSeverity;
+  healthScore: number;
+  name: string;
+  location: string;
+  reason: string;
+}[] = [
+  {
+    id: "1",
+    severity: "CRITICAL",
+    healthScore: 32,
+    name: "Construction of Community Hall",
+    location: "Berasia, Bhopal",
+    reason: "High expenditure with low progress"
+  },
+  {
+    id: "2",
+    severity: "HIGH",
+    healthScore: 45,
+    name: "Rural Road Development",
+    location: "Huzur, Bhopal",
+    reason: "Delay probability 81%"
+  },
+  {
+    id: "3",
+    severity: "MEDIUM",
+    healthScore: 61,
+    name: "Drinking Water Facility",
+    location: "Phanda, Bhopal",
+    reason: "Inconsistent progress updates"
+  },
+  {
+    id: "4",
+    severity: "MEDIUM",
+    healthScore: 64,
+    name: "School Building Renovation",
+    location: "Bairagarh, Bhopal",
+    reason: "Possible photo mismatch"
+  },
+  {
+    id: "5",
+    severity: "LOW",
+    healthScore: 78,
+    name: "Primary Health Centre",
+    location: "Kolar, Bhopal",
+    reason: "On track"
+  }
+];
+
+export const topAgencies = [
+  { name: "Rural Development Dept.", projects: 42, completionRatePct: 88, avgDelayDays: 12, score: 82 },
+  { name: "Public Works Dept.", projects: 36, completionRatePct: 67, avgDelayDays: 45, score: 61 },
+  { name: "Zila Panchayat", projects: 28, completionRatePct: 71, avgDelayDays: 38, score: 68 },
+  { name: "Water Resources Dept.", projects: 24, completionRatePct: 58, avgDelayDays: 62, score: 52 },
+  { name: "Education Dept.", projects: 18, completionRatePct: 94, avgDelayDays: 8, score: 86 }
+];
+
+export const attentionCentreItems: {
+  id: string;
+  tone: "red" | "amber" | "orange" | "blue";
+  title: string;
+  detail?: string;
+}[] = [
+  { id: "1", tone: "red", title: "3 projects likely to delay" },
+  { id: "2", tone: "amber", title: "2 financial anomalies detected" },
+  { id: "3", tone: "orange", title: "1 agency needs attention", detail: "Public Works Dept." },
+  {
+    id: "4",
+    tone: "blue",
+    title: "4 development gaps in your constituency",
+    detail: "Mainly in rural water supply and healthcare"
+  }
+];
+
+export const attentionCentreNewCount = 4;
+
+export const dashboardAiInsight = {
+  highlight: "5 projects",
+  lead: "Based on current trends,",
+  tail: "are at high risk of delay in the next 3 months.",
+  recommendation: "Recommend prioritizing inspection for projects in Berasia and Huzur blocks."
+};
+
+export const governanceQuote = {
+  text: "Data-driven governance leads to stronger democracy and greater development.",
+  attribution: "NITI Aayog"
+};
