@@ -454,58 +454,6 @@ export const constituencyRecommendations: Recommendation[] = [
 export const aiRecommendation =
   "Prioritize Drinking Water projects in rural Berasia and Phanda blocks. Initiate 5-7 healthcare projects in underserved gram panchayats. Improve project monitoring for delayed constituency-level works. Consider convergence with state schemes to maximize impact.";
 
-// ---- Project Detail (Construction of Community Hall) -----------------------
-
-export const projectDetailTimeline = [
-  { label: "Project Sanctioned", date: "12 Jan 2023", status: "Completed" as const },
-  { label: "Work Order Issued", date: "15 Feb 2023", status: "Completed" as const },
-  { label: "Foundation Completed", date: "20 Jun 2023", status: "Completed" as const },
-  { label: "Structure Work", date: "30 Sep 2023", status: "Delayed" as const },
-  { label: "Finishing Work", date: "31 Mar 2024", status: "In Progress" as const },
-  { label: "Project Completion", date: "31 Dec 2024", status: "Pending" as const }
-];
-
-export const projectFinancialTrend = [
-  { quarter: "Q3 2023", cumulative: 8, expected: 12 },
-  { quarter: "Q4 2023", cumulative: 18, expected: 22 },
-  { quarter: "Q1 2024", cumulative: 26, expected: 32 },
-  { quarter: "Q2 2024", cumulative: 33, expected: 40 },
-  { quarter: "Q3 2024", cumulative: 38, expected: 46 },
-  { quarter: "Q4 2024", cumulative: 41, expected: 50 }
-];
-
-export const projectPhotos = [
-  { date: "12 Jan 2024", url: "/images/site-1.jpg" },
-  { date: "18 Mar 2024", url: "/images/site-2.jpg" },
-  { date: "25 May 2024", url: "/images/site-3.jpg" },
-  { date: "10 Aug 2024", url: "/images/site-4.jpg" }
-];
-
-export const projectAiInsights = [
-  "High expenditure (82%) but low physical progress (48%).",
-  "Timeline slippage detected based on current trend.",
-  "Spending rate is 2.3x higher than comparable projects.",
-  "Last update was 45 days ago.",
-  "Similar projects by this agency average delay of 62 days."
-];
-
-export const projectRiskIndicators = [
-  { id: "1", title: "Unexpected spending jumps", detail: "40% of expenditure claimed in last 3 months", severity: "High" as const },
-  { id: "2", title: "Stalled project risk", detail: "No significant progress in last 45 days", severity: "High" as const },
-  { id: "3", title: "Unusual cost variation", detail: "Material cost 35% higher than similar projects", severity: "High" as const },
-  { id: "4", title: "Sudden progress claims", detail: "Reported 20% progress in 10 days", severity: "Medium" as const },
-  { id: "5", title: "Long periods without updates", detail: "No field updates for 45 days", severity: "Medium" as const }
-];
-
-export const projectRadar = [
-  { metric: "Financial Progress", value: 82 },
-  { metric: "Physical Progress", value: 48 },
-  { metric: "Timeline Adherence", value: 40 },
-  { metric: "Update Consistency", value: 50 },
-  { metric: "Pending Approvals", value: 60 },
-  { metric: "Expenditure Pattern", value: 35 }
-];
-
 // ---- MP Attention Centre -----------------------------------------------------
 
 export const attentionSummary = {
