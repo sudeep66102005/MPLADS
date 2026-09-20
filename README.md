@@ -1,3 +1,5 @@
+**Live deployment:** [https://sudeep66102005.github.io/MPLADS/](https://sudeep66102005.github.io/MPLADS/)
+
 # MPLADS AI Monitoring & Audit Intelligence
 
 _SIH26102 · An explainable AI decision-support layer on top of eSAKSHI /
