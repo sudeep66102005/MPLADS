@@ -20,6 +20,13 @@ from __future__ import annotations
 from app.schemas import AiExplanation, ProjectAiAnalysis, RiskLevel
 
 
+def _maybe_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def compute_health_score(project: dict) -> float:
     """Composite 0-100 health score. Higher = healthier project.
 
@@ -54,23 +61,95 @@ def detect_anomalies(project: dict) -> list[AiExplanation]:
 
     Each rule is intentionally simple and stated in plain language so a
     human reviewer can immediately see *why* something was flagged.
+
+    NOTE: This is v1 and is purposely conservative + explainable.
     """
     flags: list[AiExplanation] = []
 
-    progress_gap = project["financial_progress_pct"] - project["physical_progress_pct"]
-    if progress_gap > 25:
+    physical = _maybe_float(project.get("physical_progress_pct"))
+    financial = _maybe_float(project.get("financial_progress_pct"))
+    sanctioned = _maybe_float(project.get("sanctioned_amount_cr"))
+    released = _maybe_float(project.get("released_amount_cr"))
+    expenditure = _maybe_float(project.get("expenditure_cr"))
+
+    # ── Invalid progress-value detection ───────────────────────────────
+    if physical is None or not (0 <= physical <= 100):
         flags.append(
             AiExplanation(
-                factor="Expenditure vs. Progress Mismatch",
-                detail=(
-                    f"{project['financial_progress_pct']}% of funds spent but only "
-                    f"{project['physical_progress_pct']}% physical progress reported."
-                ),
-                severity=RiskLevel.high,
+                factor="Invalid Physical Progress Value",
+                detail=f"Physical progress is {project.get('physical_progress_pct')}, expected 0–100%.",
+                severity=RiskLevel.critical,
+            )
+        )
+    if financial is None or not (0 <= financial <= 100):
+        flags.append(
+            AiExplanation(
+                factor="Invalid Financial Progress Value",
+                detail=f"Financial progress is {project.get('financial_progress_pct')}, expected 0–100%.",
+                severity=RiskLevel.critical,
             )
         )
 
-    if project["update_consistency_pct"] < 45:
+    # If progress is invalid, do not compute mismatch rules that rely on it.
+    progress_valid = (
+        physical is not None
+        and financial is not None
+        and 0 <= physical <= 100
+        and 0 <= financial <= 100
+    )
+
+    # ── Financial-progress vs physical-progress mismatch (v1) ──────────
+    if progress_valid:
+        progress_gap = financial - physical
+
+        # Strict mismatch: large spend progress but low physical progress.
+        if progress_gap > 25:
+            flags.append(
+                AiExplanation(
+                    factor="Financial vs Physical Progress Mismatch",
+                    detail=(
+                        f"Financial progress is {financial:.0f}% but physical progress is only {physical:.0f}% "
+                        f"(gap {progress_gap:.0f}%)."
+                    ),
+                    severity=RiskLevel.high,
+                )
+            )
+
+        # Inconsistency: physical progress significantly ahead of financial
+        # can indicate over-reporting or delayed accounting.
+        if progress_gap < -25:
+            flags.append(
+                AiExplanation(
+                    factor="Physical vs Financial Progress Inconsistency",
+                    detail=(
+                        f"Physical progress is {physical:.0f}% but financial progress is only {financial:.0f}% "
+                        f"(gap {abs(progress_gap):.0f}%)."
+                    ),
+                    severity=RiskLevel.medium,
+                )
+            )
+
+    # ── Expenditure > released/sanctioned detection ─────────────────────
+    if expenditure is not None and released is not None and expenditure > released + 1e-9:
+        flags.append(
+            AiExplanation(
+                factor="Expenditure Exceeds Released Funds",
+                detail=f"Expenditure is ₹{expenditure:.2f} Cr, but released funds are only ₹{released:.2f} Cr.",
+                severity=RiskLevel.critical,
+            )
+        )
+
+    if expenditure is not None and sanctioned is not None and expenditure > sanctioned + 1e-9:
+        flags.append(
+            AiExplanation(
+                factor="Expenditure Exceeds Sanctioned Amount",
+                detail=f"Expenditure is ₹{expenditure:.2f} Cr, but sanctioned amount is only ₹{sanctioned:.2f} Cr.",
+                severity=RiskLevel.critical,
+            )
+        )
+
+    # ── Existing pending-approval + update-consistency checks ───────────
+    if _maybe_float(project.get("update_consistency_pct")) is not None and project["update_consistency_pct"] < 45:
         flags.append(
             AiExplanation(
                 factor="Long Period Without Updates",
@@ -79,7 +158,7 @@ def detect_anomalies(project: dict) -> list[AiExplanation]:
             )
         )
 
-    if project["pending_approvals"] >= 3:
+    if project.get("pending_approvals") is not None and project["pending_approvals"] >= 3:
         flags.append(
             AiExplanation(
                 factor="Multiple Pending Approvals",
@@ -117,6 +196,9 @@ def analyze_project_from_model(project) -> ProjectAiAnalysis:
         "timeline_adherence_pct": project.timeline_adherence_pct,
         "update_consistency_pct": project.update_consistency_pct,
         "pending_approvals": project.pending_approvals,
+        "sanctioned_amount_cr": project.sanctioned_amount_cr,
+        "released_amount_cr": project.released_amount_cr,
+        "expenditure_cr": project.expenditure_cr,
     }
 
     health_score = compute_health_score(project_dict)
