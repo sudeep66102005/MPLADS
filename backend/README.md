@@ -1,200 +1,38 @@
-# MPLADS AI Backend
+# MPLADS backend
 
-Python / FastAPI backend implementing the **Backend API** and **AI Engine**
-from the system architecture diagram. Provides RESTful APIs for the
-dashboard, real JWT authentication, PostgreSQL + PostGIS database, and
-explainable AI scoring.
+FastAPI service for the SIH project: authenticated project records, jurisdiction access, CSV import/export, explainable monitoring rules, private photo evidence and inspection review.
 
-## Quick Start
+## Local run (Python 3.12)
+From `backend/`:
 
-### 1. Start PostgreSQL (Docker)
+1. Create a virtual environment and install `pip install -r requirements-dev.txt`.
+2. Copy `.env.example` to `.env`. Set a unique JWT secret. SQLite works locally.
+3. Run `alembic upgrade head`.
+4. For your own database, set `BOOTSTRAP_ADMIN_PASSWORD` to a unique password of at least 12 characters, then run `python -m app.bootstrap`. Remove that environment variable afterwards.
+5. For synthetic demo data only, explicitly set `DEMO_MODE=true`, then run `python -m app.seed`. Never seed real operational deployments with the public demo passwords.
+6. Run `uvicorn app.main:app --host 127.0.0.1 --port 8000`.
+7. Open `http://127.0.0.1:8000/docs` or the frontend's Connected Workspace.
 
-```bash
-cd backend
-docker-compose up -d
-```
+Use `POST /api/v1/auth/login` with a JSON username/password; send the returned access token as `Authorization: Bearer <token>`. Sign-out revokes that token. All operational endpoints require authentication.
 
-This starts PostgreSQL 16 + PostGIS 3.4 on `localhost:5432` and pgAdmin
-on `localhost:5050`.
+Run `pytest -q` to verify the backend. CI tests SQLite and PostgreSQL 16. Production startup runs Alembic migrations before starting the server. Database migrations preserve existing tables; backups are required before upgrades.
 
-### 2. Install Dependencies
+## Deployment boundary
 
-```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
+GitHub Pages serves static browser files. Python, PostgreSQL and uploaded files must run on an API host such as Render. Set the API's `CORS_ALLOW_ORIGINS` to `https://sudeep66102005.github.io` (origin only, no /MPLADS path). Persistent evidence storage is required.
 
-pip install -r requirements.txt
-```
+The Docker Compose configuration runs the API and PostgreSQL with persistent volumes. Supply `POSTGRES_PASSWORD` and `JWT_SECRET_KEY` in `.env`, then run `docker compose up --build`. No public demo accounts are created automatically.
 
-### 3. Configure Environment
+## Data and analysis
 
-```bash
-cp .env.example .env
-# Edit .env if needed (defaults work with docker-compose)
-```
+Money retains the existing API's crore units. CSV import uses a template available at `GET /api/v1/imports/template`; a file is committed only when all rows validate.
 
-### 4. Seed the Database
+Scoring is a versioned rule-based baseline. It compares reported progress against the recorded schedule, flags spending/progress mismatches and missing updates, and saves analysis inputs/results. Delay probabilities and image-derived completion percentages are unavailable, not measured zeros. No live eSAKSHI API access or trained prediction model is claimed.
 
-```bash
-python -m app.seed
-```
+Photo checks detect exact/perceptual duplicates and compare supplied coordinates. Coordinates are not proof of capture location. Officers record findings; authorized reviewers decide whether to close a case.
 
-This creates all tables and populates them with demo data matching the
-frontend's mockData.ts.
+The current schema uses latitude/longitude and optional GeoJSON text, so PostGIS is not required. PostGIS can be introduced with a separate migration when spatial query requirements justify it.
 
-### 5. Run the Server
+## Delivery checkpoints
 
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-
-Visit http://localhost:8000/docs for interactive Swagger docs.
-
-### 6. Run Tests
-
-```bash
-pytest -v
-```
-
-## Demo Credentials
-
-| Username | Password | Role |
-|----------|----------|------|
-| `arjun.mehta` | `demo123` | MP |
-| `admin` | `admin123` | Admin |
-| `inspector.sharma` | `demo123` | Inspecting / Field Officer |
-| `nodal.bhopal` | `demo123` | District Nodal Authority |
-
-## API Reference (v0.2.0)
-
-### Auth
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/api/v1/auth/login` | JWT login |
-| GET | `/api/v1/auth/me` | Current user profile |
-| POST | `/api/v1/auth/register` | Create user (admin only) |
-| POST | `/api/v1/auth/refresh` | Refresh JWT token |
-
-### Projects
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/projects` | List projects (paginated, filterable, sortable) |
-| GET | `/api/v1/projects/all` | All projects (for maps/charts) |
-| GET | `/api/v1/projects/priority-queue` | AI-ranked priority queue |
-| GET | `/api/v1/projects/{id}` | Project detail |
-| POST | `/api/v1/projects` | Create project |
-| PATCH | `/api/v1/projects/{id}` | Update project |
-| DELETE | `/api/v1/projects/{id}` | Soft-delete project |
-| GET | `/api/v1/projects/{id}/ai-analysis` | AI health/delay/anomaly analysis |
-| GET | `/api/v1/projects/{id}/timeline` | Project milestones |
-| GET | `/api/v1/projects/{id}/photos` | Project photos |
-| GET | `/api/v1/projects/{id}/financial-trend` | Quarterly financial data |
-| GET | `/api/v1/projects/{id}/radar` | Radar chart data |
-
-### Dashboard
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/dashboard/kpis` | Aggregate KPIs |
-| GET | `/api/v1/dashboard/sector-distribution` | Sector pie chart |
-| GET | `/api/v1/dashboard/top-issues` | AI-identified top issues |
-| GET | `/api/v1/dashboard/ai-insights` | Natural-language AI insights |
-
-### Agencies
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/agencies` | List agencies |
-| GET | `/api/v1/agencies/{id}` | Agency detail |
-| GET | `/api/v1/agencies/{id}/projects` | Agency's projects |
-
-### Constituencies
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/constituencies` | List constituencies |
-| GET | `/api/v1/constituencies/{id}` | Constituency detail |
-| GET | `/api/v1/constituencies/{id}/kpis` | Constituency KPIs |
-| GET | `/api/v1/constituencies/{id}/sector-gaps` | Sector gap analysis |
-| GET | `/api/v1/constituencies/{id}/ward-gaps` | Ward-level gaps |
-| GET | `/api/v1/constituencies/{id}/investment-trend` | Year-over-year trend |
-| GET | `/api/v1/constituencies/{id}/recommendations` | AI recommendations |
-
-### Inspections
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/inspections` | List inspections |
-| POST | `/api/v1/inspections` | Create inspection |
-| GET | `/api/v1/inspections/{id}` | Inspection detail |
-| PATCH | `/api/v1/inspections/{id}` | Update inspection |
-
-### Reports
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/v1/reports/fund-utilization` | Fund utilization report |
-| GET | `/api/v1/reports/project-status` | Project status summary |
-| GET | `/api/v1/reports/export` | CSV export |
-
-### AI Engine
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/api/v1/ai/projects/{id}/rescore` | Re-score single project |
-| POST | `/api/v1/ai/rescore-all` | Batch re-score all projects |
-
-### System
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/health` | Liveness check |
-
-## Architecture
-
-```
-backend/
-├── app/
-│   ├── core/
-│   │   ├── config.py          # Pydantic Settings (env vars)
-│   │   └── security.py        # JWT + bcrypt auth
-│   ├── ai_engine/
-│   │   ├── scoring.py         # Health score, delay prediction, anomalies
-│   │   └── photo_verification.py  # CV pipeline stub (Person 2)
-│   ├── routers/
-│   │   ├── auth.py            # JWT login/register/me/refresh
-│   │   ├── projects.py        # Project CRUD + sub-resources
-│   │   ├── agencies.py        # Agency performance
-│   │   ├── constituencies.py  # Constituency insights + gaps
-│   │   ├── dashboard.py       # Dashboard KPIs + aggregates
-│   │   ├── inspections.py     # Inspection dossier CRUD
-│   │   ├── reports.py         # Reports + CSV export
-│   │   └── ai_scoring.py      # Direct AI engine access
-│   ├── tasks/
-│   │   ├── scoring_job.py     # Batch AI rescoring
-│   │   └── data_sync.py       # eSAKSHI data ingestion stub
-│   ├── database.py            # SQLAlchemy engine + session
-│   ├── models.py              # ORM models (14 tables)
-│   ├── schemas.py             # Pydantic schemas (camelCase output)
-│   ├── seed.py                # Database seed script
-│   └── main.py                # FastAPI app entry point
-├── tests/
-│   ├── conftest.py            # Test fixtures (SQLite in-memory)
-│   ├── test_api.py            # API endpoint tests
-│   ├── test_auth.py           # Auth flow tests
-│   └── test_ai_engine.py      # AI scoring tests
-├── docker-compose.yml         # PostgreSQL + PostGIS + pgAdmin
-├── requirements.txt
-├── .env.example
-└── README.md
-```
-
-## Integration Points for Team
-
-- **Person 1 (ML/Prediction):** Plug trained models into
-  `app/ai_engine/scoring.py` — same function signatures, swap rule-based
-  heuristics for gradient-boosting/etc.
-- **Person 2 (Vision/CV):** Implement the stubs in
-  `app/ai_engine/photo_verification.py` — photo verification, duplicate
-  detection, geo-metadata validation.
-- **Person 3 (Data/Anomaly):** Extend `detect_anomalies()` in scoring.py
-  and add time-series analysis; extend data sync in `app/tasks/data_sync.py`.
-- **Person 5 (Dashboard):** Replace `mockData.ts` imports with `fetch()`
-  calls to the endpoints above. All JSON output is camelCase.
-- **Person 6 (Mobile):** Use the same REST API from the mobile app.
+See `../DELIVERY.md` for the incremental implementation and verification record.

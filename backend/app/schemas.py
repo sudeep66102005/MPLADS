@@ -25,6 +25,7 @@ class CamelModel(BaseModel):
         alias_generator=to_camel,
         populate_by_name=True,
         from_attributes=True,
+        allow_inf_nan=False,
     )
 
 

@@ -28,6 +28,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def hash_password(plain: str) -> str:
+    if len(plain.encode("utf-8")) > 72:
+        raise HTTPException(status_code=422, detail="Password must fit within 72 UTF-8 bytes")
     return pwd_context.hash(plain)
 
 
@@ -59,6 +61,7 @@ def decode_access_token(token: str) -> dict:
             token,
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
+            options={"require_exp": True, "require_iat": True, "require_jti": True},
         )
         return payload
     except JWTError:
@@ -80,6 +83,9 @@ def get_current_user(
     from app.models import User  # deferred import to avoid circular
 
     payload = decode_access_token(token)
+    from app.operational_models import RevokedToken
+    if db.get(RevokedToken, payload["jti"]):
+        raise HTTPException(status_code=401, detail="Session ended; sign in again")
     username: str | None = payload.get("sub")
     if username is None:
         raise HTTPException(

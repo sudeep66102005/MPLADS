@@ -44,6 +44,10 @@ logger = logging.getLogger(__name__)
 
 def seed():
     """Drop all tables and re-create with seed data."""
+    from app.core.config import settings
+    from app import operational_models
+    if not settings.DEMO_MODE:
+        raise RuntimeError("Set DEMO_MODE=true explicitly to load public synthetic demo accounts and data")
     logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
 
@@ -315,7 +319,17 @@ def seed():
         ]
         db.add_all(users)
 
+        db.flush()
+        from app.services import score
+        for project in db.query(Project).all():
+            score(db, project)
         db.commit()
+        if engine.dialect.name == "postgresql":
+            from sqlalchemy import text
+            for table in Base.metadata.sorted_tables:
+                if "id" in table.c and str(table.c.id.type) == "INTEGER":
+                    db.execute(text(f"SELECT setval(pg_get_serial_sequence('{table.name}', 'id'), COALESCE((SELECT MAX(id) FROM {table.name}), 1), EXISTS(SELECT 1 FROM {table.name}))"))
+            db.commit()
         logger.info("Database seeded successfully!")
         logger.info(f"  - {len(projects_data)} projects")
         logger.info(f"  - {len(agencies_data)} agencies")

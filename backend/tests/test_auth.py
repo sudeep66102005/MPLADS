@@ -1,72 +1,24 @@
-"""Auth endpoint tests."""
+def test_login_logout_and_refresh(client, headers):
+    h = headers("mp")
+    assert client.get("/api/v1/auth/me", headers=h).json()["username"] == "mp"
+    r = client.post("/api/v1/auth/refresh", headers=h)
+    assert r.status_code == 200
+    assert client.get("/api/v1/auth/me", headers=h).status_code == 401
+    new = {"Authorization": "Bearer " + r.json()["accessToken"]}
+    assert client.post("/api/v1/auth/logout", headers=new).status_code == 204
+    assert client.get("/api/v1/auth/me", headers=new).status_code == 401
 
+def test_protected_routes(client):
+    for path in ["/projects", "/projects/1", "/agencies", "/dashboard/kpis", "/reports/export", "/inspections", "/audit"]:
+        assert client.get("/api/v1" + path).status_code == 401
 
-def test_login_success(client):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"username": "testmp", "password": "test123"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert "accessToken" in body  # camelCase
-    assert body["role"] == "MP"
-    assert body["displayName"] == "Test MP"
+def test_login_rate_limit(client):
+    for _ in range(10):
+        assert client.post("/api/v1/auth/login", json={"username": "missing", "password": "wrong"}).status_code == 401
+    assert client.post("/api/v1/auth/login", json={"username": "missing", "password": "wrong"}).status_code == 429
 
-
-def test_login_wrong_password(client):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"username": "testmp", "password": "wrongpass"},
-    )
-    assert response.status_code == 401
-
-
-def test_login_nonexistent_user(client):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"username": "nobody", "password": "test123"},
-    )
-    assert response.status_code == 401
-
-
-def test_me_endpoint(client):
-    # Login first
-    login_resp = client.post(
-        "/api/v1/auth/login",
-        json={"username": "testmp", "password": "test123"},
-    )
-    token = login_resp.json()["accessToken"]
-
-    # Get profile
-    response = client.get(
-        "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["username"] == "testmp"
-    assert body["role"] == "MP"
-
-
-def test_me_without_token(client):
-    response = client.get("/api/v1/auth/me")
-    assert response.status_code == 401
-
-
-def test_refresh_token(client):
-    # Login first
-    login_resp = client.post(
-        "/api/v1/auth/login",
-        json={"username": "testmp", "password": "test123"},
-    )
-    token = login_resp.json()["accessToken"]
-
-    # Refresh
-    response = client.post(
-        "/api/v1/auth/refresh",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert "accessToken" in body
-    assert body["accessToken"] != token  # new token issued
+def test_registration_requires_admin(client, headers):
+    payload = {"username": "new-user", "password": "long-password", "displayName": "New User", "role": "MP", "constituencyId": 1}
+    assert client.post("/api/v1/auth/register", json=payload, headers=headers("mp")).status_code == 403
+    assert client.post("/api/v1/auth/register", json=payload, headers=headers()).status_code == 201
+    assert client.post("/api/v1/auth/register", json=payload, headers=headers()).status_code == 409

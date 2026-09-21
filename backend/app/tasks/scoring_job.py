@@ -1,36 +1,15 @@
-"""Scheduled batch AI rescoring job.
-
-Run manually:
-    python -m app.tasks.scoring_job
-
-Or trigger via cron / task scheduler:
-    0 2 * * * cd /path/to/backend && python -m app.tasks.scoring_job
-"""
-
-from __future__ import annotations
-
-import logging
-
-from app.ai_engine.scoring import score_all_projects
+"""Run with python -m app.tasks.scoring_job; schedule daily on the API host."""
 from app.database import SessionLocal
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+from app.models import Project
+from app.services import score
 
 def run_scoring_job():
-    """Score all projects and persist results."""
-    logger.info("Starting batch AI rescoring job...")
-    db = SessionLocal()
-    try:
-        count = score_all_projects(db)
-        logger.info(f"Successfully scored {count} projects.")
-    except Exception:
-        logger.exception("Scoring job failed")
-        raise
-    finally:
-        db.close()
-
+    with SessionLocal() as db:
+        projects = db.query(Project).filter(Project.is_deleted.is_(False)).all()
+        for project in projects:
+            score(db, project)
+        db.commit()
+        print(f"Saved {len(projects)} rule-based analysis snapshots.")
 
 if __name__ == "__main__":
     run_scoring_job()
