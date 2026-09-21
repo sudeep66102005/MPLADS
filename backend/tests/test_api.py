@@ -47,6 +47,10 @@ def test_get_project_ai_analysis(client):
     assert "explanations" in body
     assert "aiHealthScore" in body
 
+    factors = {e["factor"] for e in body["explanations"]}
+    assert "Financial vs Physical Progress Mismatch" in factors
+    assert "Multiple Pending Approvals" in factors
+
 
 def test_priority_queue_sorted_descending(client):
     response = client.get("/api/v1/projects/priority-queue")
