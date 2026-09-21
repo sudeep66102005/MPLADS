@@ -4,7 +4,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 
 1. Backend startup and database foundation: implemented. Local tests and migrated demo startup verified; PostgreSQL CI runs on publication.
 2. Login, roles and jurisdiction permissions: implemented and tested.
-3. Project management and imports: planned.
+3. Project management and imports: implemented and tested.
 4. Explainable scoring and analysis history: planned.
 5. Photo evidence and duplicate checks: planned.
 6. Inspection workflow and field interface: planned.
@@ -20,3 +20,6 @@ Hosting boundary: GitHub Pages serves the frontend; Render will host the API/dat
 
 ## Checkpoint 2
 Added account deactivation, additional access listing/revocation, bounded login inputs, and regression coverage for expired tokens, existing-session revocation, cross-origin requests and administrator-only changes. Nine auth tests pass. Checkpoint 1 also passed GitHub CI on SQLite and PostgreSQL.
+
+## Checkpoint 3
+Added immutable project revisions, stale-edit protection, strict CSV column/header validation and a CLI importer for approved exports. Project API regression tests pass, including atomic rollback and repeat imports.

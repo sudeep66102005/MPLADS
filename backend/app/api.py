@@ -15,8 +15,8 @@ from app.core.security import get_current_user, hash_password, verify_password, 
 from app.schemas import LoginRequest, LoginResponse, UserOut
 from app.contracts import ProjectInput, ProjectPatch, UserInput, GrantInput, UserStatusInput, AgencyInput, ConstituencyInput, MilestoneInput, GapInput
 from app.access import project_query, get_project, require, role, MANAGERS, GLOBAL, OFFICER, AGENCY, constituency_ids, check_constituency, audit
-from app.services import project_out, create_project, score, analyze, kpis, agency_out
-from app.operational_models import AccessGrant, AnalysisSnapshot, AuditEvent, LoginAttempt, RevokedToken, Evidence
+from app.services import project_out, create_project, score, analyze, kpis, agency_out, record_revision
+from app.operational_models import AccessGrant, AnalysisSnapshot, AuditEvent, LoginAttempt, RevokedToken, Evidence, ProjectRevision
 
 router = APIRouter()
 Auth = Depends(get_current_user)
@@ -184,8 +184,11 @@ def project(project_id: int, user=Auth, db: Session = DB):
 @router.patch("/projects/{project_id}")
 def update(project_id: int, payload: ProjectPatch, user=Auth, db: Session = DB):
     require(user, MANAGERS)
-    p = get_project(db, user, project_id)
-    values = payload.model_dump(exclude_unset=True)
+    get_project(db, user, project_id)
+    p = project_query(db, user).filter(m.Project.id == project_id).with_for_update().populate_existing().one()
+    if payload.expected_updated_at and payload.expected_updated_at.replace(tzinfo=None) != p.updated_at:
+        raise HTTPException(409, "Project changed. Reload before saving.")
+    values = payload.model_dump(exclude_unset=True, exclude={"expected_updated_at"})
     # Validate combined state, including values omitted by a partial update.
     if values.get("expected_end_date", p.expected_end_date) <= p.start_date:
         raise HTTPException(422, "End date must be after start date")
@@ -200,6 +203,7 @@ def update(project_id: int, payload: ProjectPatch, user=Auth, db: Session = DB):
     p.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.flush()
     score(db, p)
+    record_revision(db, user, p, "updated")
     audit(db, user, "project.updated", p.id, fields=list(values))
     db.commit()
     return project_out(p)
@@ -240,6 +244,12 @@ def history(project_id: int, user=Auth, db: Session = DB):
     get_project(db, user, project_id)
     rows = db.query(AnalysisSnapshot).filter_by(project_id=project_id).order_by(AnalysisSnapshot.id.desc()).limit(100)
     return [{"id": s.id, "createdAt": s.created_at, "inputs": s.inputs, "result": s.result} for s in rows]
+
+@router.get("/projects/{project_id}/revisions")
+def project_revisions(project_id: int, user=Auth, db: Session = DB):
+    get_project(db, user, project_id)
+    rows = db.query(ProjectRevision).filter_by(project_id=project_id).order_by(ProjectRevision.id.desc()).limit(100)
+    return [{"id": r.id, "actorId": r.actor_id, "source": r.source, "values": r.values, "createdAt": r.created_at} for r in rows]
 
 @router.get("/projects/{project_id}/timeline")
 def timeline(project_id: int, user=Auth, db: Session = DB):
@@ -432,7 +442,11 @@ async def import_projects(file: UploadFile = File(...), user=Auth, db: Session =
     if len(raw) > 1024*1024:
         raise HTTPException(413, "CSV limit is 1 MB")
     try:
-        rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
+        reader = csv.DictReader(io.StringIO(raw.decode("utf-8-sig")), strict=True)
+        headers = reader.fieldnames or []
+        if len(set(headers)) != len(headers):
+            raise HTTPException(422, "CSV header names must be unique")
+        rows = list(reader)
     except (UnicodeError, csv.Error):
         raise HTTPException(422, "Upload a UTF-8 CSV")
     if not rows or len(rows) > 2000:
@@ -441,6 +455,8 @@ async def import_projects(file: UploadFile = File(...), user=Auth, db: Session =
     seen = set()
     for index, row in enumerate(rows, 2):
         try:
+            if None in row or any(value is None for value in row.values()):
+                raise ValueError("Row column count does not match the header")
             cid, aid = int(row["constituency_id"]), int(row["agency_id"])
             c, a = db.get(m.Constituency, cid), db.get(m.Agency, aid)
             if not c or not a:
@@ -464,6 +480,7 @@ async def import_projects(file: UploadFile = File(...), user=Auth, db: Session =
                 p.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 db.flush()
                 score(db, p)
+                record_revision(db, user, p, "csv-import")
                 audit(db, user, "project.imported", p.id)
                 updated += 1
             else:

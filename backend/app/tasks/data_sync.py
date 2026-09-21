@@ -1,47 +1,26 @@
-"""eSAKSHI data ingestion / sync stub.
-
-This module defines the interface for importing project and financial data
-from eSAKSHI into the MPLADS AI database. The actual implementation depends
-on the data format / API that eSAKSHI exposes.
-
-Run manually:
-    python -m app.tasks.data_sync
-
-Or trigger via webhook / cron.
+"""Import an approved eSAKSHI export using the same atomic validation as the API.
+No live eSAKSHI access is assumed.
+Usage: python -m app.tasks.data_sync projects.csv --actor admin
 """
-
-from __future__ import annotations
-
-import logging
-
+import argparse
+import asyncio
+from pathlib import Path
+from starlette.datastructures import UploadFile
 from app.database import SessionLocal
+from app.models import User
+from app.api import import_projects
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-def sync_projects_from_esakshi():
-    """Pull latest project data from eSAKSHI and upsert into the database.
-
-    TODO: Implement once eSAKSHI API access is available.
-    Expected data sources:
-      - Project master data (name, code, sector, constituency, agency, etc.)
-      - Financial data (sanctioned, released, expenditure)
-      - Physical progress updates
-      - Photo uploads
-      - Milestone/timeline events
-    """
-    logger.info("eSAKSHI data sync started...")
-    db = SessionLocal()
-    try:
-        # Placeholder — implement actual sync logic here
-        logger.info("eSAKSHI sync not yet implemented — using seed data only.")
-    except Exception:
-        logger.exception("Data sync failed")
-        raise
-    finally:
-        db.close()
-
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("csv_file", type=Path)
+    parser.add_argument("--actor", required=True, help="Existing manager/admin username for audit attribution")
+    args = parser.parse_args()
+    with SessionLocal() as db, args.csv_file.open("rb") as source:
+        actor = db.query(User).filter_by(username=args.actor, is_active=True).first()
+        if actor is None:
+            raise SystemExit("Unknown or inactive actor")
+        result = asyncio.run(import_projects(UploadFile(file=source, filename=args.csv_file.name), actor, db))
+        print(result)
 
 if __name__ == "__main__":
-    sync_projects_from_esakshi()
+    main()

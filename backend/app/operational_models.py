@@ -66,3 +66,12 @@ class LoginAttempt(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(100), nullable=False, index=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+class ProjectRevision(Base):
+    __tablename__ = "project_revisions"
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, index=True)
+    actor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    source = Column(String(50), nullable=False)
+    values = Column(JSON, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)

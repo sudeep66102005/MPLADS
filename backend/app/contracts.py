@@ -1,5 +1,5 @@
 """Validated write contracts. Money fields retain the existing API's crore units."""
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 from pydantic import Field, model_validator
 from app.schemas import CamelModel, ProjectCreate, ProjectUpdate, UserRole
@@ -21,6 +21,7 @@ class ProjectInput(ProjectCreate):
         return self
 
 class ProjectPatch(ProjectUpdate):
+    expected_updated_at: datetime | None = None
     name: str | None = Field(default=None, min_length=1, max_length=300)
     physical_progress_pct: float | None = Field(default=None, ge=0, le=100)
     financial_progress_pct: float | None = Field(default=None, ge=0, le=100)

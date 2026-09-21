@@ -119,3 +119,21 @@ def test_gap_requires_provenance(client, headers):
     payload = {"sector": "Water", "need": 100, "covered": 60, "source": "Pilot household survey", "asOf": str(date.today())}
     assert client.post("/api/v1/constituencies/1/sector-gaps", json=payload, headers=h).json()["gapPct"] == 40
     assert client.get("/api/v1/constituencies/1/sector-gaps", headers=headers("mp")).json()[0]["source"] == payload["source"]
+
+def test_import_rejects_extra_columns_and_duplicate_headers(client, headers):
+    h = headers()
+    for data in ["code,code\nA,A\n", "code,name\nA,B,C\n"]:
+        response = client.post("/api/v1/imports/projects", files={"file":("bad.csv",data,"text/csv")}, headers=h)
+        assert response.status_code == 422
+    assert client.get("/api/v1/projects", headers=h).json()["total"] == 2
+
+def test_project_history_and_stale_update(client, headers):
+    h = headers()
+    initial = client.get("/api/v1/projects/1", headers=h).json()
+    body = {"name":"Updated project", "expectedUpdatedAt":initial["updatedAt"]}
+    assert client.patch("/api/v1/projects/1", json=body, headers=h).status_code == 200
+    assert client.patch("/api/v1/projects/1", json=body, headers=h).status_code == 409
+    history = client.get("/api/v1/projects/1/revisions", headers=h).json()
+    assert history[0]["source"] == "updated"
+    assert history[0]["values"]["name"] == "Updated project"
+    assert client.get("/api/v1/projects/2/revisions", headers=headers("mp")).status_code == 404

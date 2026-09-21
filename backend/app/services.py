@@ -3,7 +3,7 @@ from datetime import date
 from collections import Counter
 from fastapi import HTTPException
 from app import models as m
-from app.operational_models import AnalysisSnapshot
+from app.operational_models import AnalysisSnapshot, ProjectRevision
 from sqlalchemy.orm.attributes import flag_modified
 from app.access import check_constituency, audit
 from app.routers.projects import _project_to_out
@@ -72,6 +72,10 @@ def score(db, project):
     db.add(AnalysisSnapshot(project_id=project.id, rule_version=RULE_VERSION, inputs=inputs, result=result))
     return result
 
+def record_revision(db, user, project, source):
+    db.add(ProjectRevision(project_id=project.id, actor_id=user.id, source=source,
+                           values=project_out(project)))
+
 def create_project(db, user, payload):
     check_constituency(db, user, payload.constituency_id)
     c = db.get(m.Constituency, payload.constituency_id)
@@ -89,6 +93,7 @@ def create_project(db, user, payload):
     db.add(project)
     db.flush()
     score(db, project)
+    record_revision(db, user, project, "created")
     audit(db, user, "project.created", project.id)
     return project
 
