@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     MAX_UPLOAD_BYTES: int = 8 * 1024 * 1024
     AUTO_CREATE_TABLES: bool = True
     DEMO_MODE: bool = False
+    DELAY_MODEL_PATH: str = ""
 
     # ── CORS ──────────────────────────────────────────────────────────────
     CORS_ALLOW_ORIGINS: str = "http://localhost:3000"

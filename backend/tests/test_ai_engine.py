@@ -70,3 +70,37 @@ def test_health_score_improves_with_better_metrics():
         "pending_approvals": 0,
     })
     assert good > poor
+
+def test_rescoring_preserves_source_timestamp(db):
+    from app.models import Project
+    from app.services import score
+    from datetime import datetime, timedelta
+    p = db.get(Project,1)
+    previous = datetime.now()-timedelta(days=60)
+    p.updated_at = previous
+    db.commit()
+    score(db,p); db.commit(); db.refresh(p)
+    assert p.updated_at == previous
+    assert any(e["factor"] == "Stale source record" for e in analyze_project_rules(p)["explanations"])
+
+def analyze_project_rules(p):
+    from app.services import analyze
+    return analyze(p)
+
+def test_safe_model_inference_and_invalid_fallback(db, tmp_path, monkeypatch):
+    import json
+    from app.core.config import settings
+    from app.models import Project
+    from app.ai_engine.delay_model import FEATURES
+    artifact = {"format":"mplads-linear-delay-v1","features":FEATURES,"mean":[0]*6,"scale":[1]*6,
+                "classifier":{"coef":[0]*6,"intercept":0},"regressor":{"coef":[0]*6,"intercept":10},
+                "version":"test","dataKind":"synthetic","source":"test only","evaluation":{"holdoutProjects":10}}
+    path=tmp_path/"model.json"; path.write_text(json.dumps(artifact))
+    monkeypatch.setattr(settings,"DELAY_MODEL_PATH",str(path))
+    result=analyze_project_rules(db.get(Project,1))
+    assert result["delayProbabilityPct"] == 50 and result["predictedDelayDays"] == 10
+    monkeypatch.setattr(settings,"ENVIRONMENT","production")
+    result=analyze_project_rules(db.get(Project,1))
+    assert result["delayProbabilityPct"] is None
+    assert "unavailable" in result["delayModelStatus"]
+

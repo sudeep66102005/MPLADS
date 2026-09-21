@@ -5,7 +5,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 1. Backend startup and database foundation: implemented. Local tests and migrated demo startup verified; PostgreSQL CI runs on publication.
 2. Login, roles and jurisdiction permissions: implemented and tested.
 3. Project management and imports: implemented and tested.
-4. Explainable scoring and analysis history: planned.
+4. Explainable scoring and analysis history: implemented and tested.
 5. Photo evidence and duplicate checks: planned.
 6. Inspection workflow and field interface: planned.
 7. Dashboard integration: planned.
@@ -23,3 +23,6 @@ Added account deactivation, additional access listing/revocation, bounded login 
 
 ## Checkpoint 3
 Added immutable project revisions, stale-edit protection, strict CSV column/header validation and a CLI importer for approved exports. Project API regression tests pass, including atomic rollback and repeat imports.
+
+## Checkpoint 4
+Completed versioned rule explanations and source-timestamp preservation. Added safe JSON inference and an optional delay-training pipeline with temporal holdout, known-outcome filtering, baseline comparisons and recorded dataset provenance. Synthetic artifacts are rejected in production. No real-data accuracy is claimed.

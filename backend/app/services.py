@@ -7,6 +7,8 @@ from app.operational_models import AnalysisSnapshot, ProjectRevision
 from sqlalchemy.orm.attributes import flag_modified
 from app.access import check_constituency, audit
 from app.routers.projects import _project_to_out
+from app.core.config import settings
+from app.ai_engine.delay_model import predict
 
 RULE_VERSION = "rules-1.0"
 
@@ -46,7 +48,7 @@ def analyze(project, as_of=None):
                        - (10 if overdue else 0)), 1)
     risk = round(100 - health, 1)
     level = "Critical" if risk >= 75 else "High" if risk >= 50 else "Medium" if risk >= 25 else "Low"
-    return {"projectId": str(project.id), "aiHealthScore": health, "priorityScore": risk,
+    result = {"projectId": str(project.id), "aiHealthScore": health, "priorityScore": risk,
             "riskLevel": level, "delayRiskIndicator": round(min(100, gap * .8 + spend_gap * .2), 1),
             "delayProbabilityPct": None, "predictedDelayDays": None, "overdueDays": overdue,
             "expectedProgressPct": round(expected, 1), "verifiedProgressPct": None,
@@ -54,6 +56,15 @@ def analyze(project, as_of=None):
             "method": "rule-based baseline", "limitations": [
                 "Expected progress uses a linear schedule, not a project-specific construction model.",
                 "No trained delay probability or image-derived completion percentage is available."]}
+    if settings.DELAY_MODEL_PATH:
+        try:
+            prediction = predict(settings.DELAY_MODEL_PATH, project, today, settings.ENVIRONMENT == "production")
+            result.update(delayPrediction=prediction, delayProbabilityPct=prediction["probabilityPct"],
+                          predictedDelayDays=prediction["predictedDelayDays"])
+            result["limitations"][-1] = "Delay estimates need domain validation; image-derived completion remains unavailable."
+        except (OSError, ValueError, KeyError, TypeError):
+            result["delayModelStatus"] = "Configured model unavailable or invalid; using rules only"
+    return result
 
 def score(db, project):
     result = analyze(project)
@@ -61,8 +72,8 @@ def score(db, project):
     project.ai_health_score = result["aiHealthScore"]
     project.ai_score = result["priorityScore"]
     project.risk_level = m.RiskLevelEnum(result["riskLevel"])
-    project.delay_probability_pct = 0
-    project.predicted_delay_days = 0
+    project.delay_probability_pct = result["delayProbabilityPct"] or 0
+    project.predicted_delay_days = result["predictedDelayDays"] or 0
     # Re-analysis must not make old source data look freshly updated.
     project.updated_at = project.updated_at
     flag_modified(project, "updated_at")
