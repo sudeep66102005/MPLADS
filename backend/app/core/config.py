@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ENVIRONMENT: str = "development"
     UPLOAD_DIR: str = "./data/uploads"
+    EVIDENCE_STORAGE: str = "filesystem"
     MAX_UPLOAD_BYTES: int = 8 * 1024 * 1024
     AUTO_CREATE_TABLES: bool = True
     DEMO_MODE: bool = False
@@ -39,6 +40,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_deployment(self):
+        if self.EVIDENCE_STORAGE not in {"filesystem", "database"}:
+            raise ValueError("EVIDENCE_STORAGE must be filesystem or database")
         if self.JWT_SECRET_KEY == "change-me-in-production":
             if self.ENVIRONMENT == "production":
                 raise ValueError("Set a private JWT_SECRET_KEY for production")

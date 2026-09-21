@@ -6,7 +6,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 2. Login, roles and jurisdiction permissions: implemented and tested.
 3. Project management and imports: implemented and tested.
 4. Explainable scoring and analysis history: implemented and tested.
-5. Photo evidence and duplicate checks: planned.
+5. Photo evidence and duplicate checks: implemented and tested.
 6. Inspection workflow and field interface: planned.
 7. Dashboard integration: planned.
 8. Agencies, reports and sourced coverage: planned.
@@ -26,3 +26,6 @@ Added immutable project revisions, stale-edit protection, strict CSV column/head
 
 ## Checkpoint 4
 Completed versioned rule explanations and source-timestamp preservation. Added safe JSON inference and an optional delay-training pipeline with temporal holdout, known-outcome filtering, baseline comparisons and recorded dataset provenance. Synthetic artifacts are rejected in production. No real-data accuracy is claimed.
+
+## Checkpoint 5
+Added optional database-backed photo storage for free hosts, authenticated original downloads, bounded image validation and duplicate-check safeguards for flat images. Evidence regression tests verify persistence independent of the filesystem and enforce authorization and upload limits.

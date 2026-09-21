@@ -7,13 +7,14 @@ import warnings
 from pathlib import Path
 from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
 from app.access import get_project, project_query, require, MANAGERS, OFFICER, AGENCY, audit
-from app.operational_models import Evidence
+from app.operational_models import Evidence, EvidenceContent
+from app.models import Project
 
 router = APIRouter()
 Image.MAX_IMAGE_PIXELS = 20_000_000
@@ -35,7 +36,7 @@ def inspect_image(raw):
                 probe.verify()
             with Image.open(io.BytesIO(raw)) as original:
                 im = ImageOps.exif_transpose(original).convert("L").resize((9, 8))
-                pixels = list(im.getdata())
+                pixels = list(im.get_flattened_data())
                 bits = 0
                 for y in range(8):
                     for x in range(8):
@@ -47,18 +48,18 @@ def inspect_image(raw):
 def evidence_out(e, matches=None):
     return {"id": e.id, "projectId": e.project_id, "caption": e.caption, "sha256": e.sha256,
             "size": e.size, "createdAt": e.created_at, "distanceKm": e.distance_km,
-            "locationStatus": "not supplied" if e.lat is None else "user/device supplied; not proof of capture location",
+            "locationStatus": (e.content.details.get("locationSource") if e.content else None) or ("not supplied" if e.lat is None else "user/device supplied; not proof of capture location"),
             "filePath": f"/api/v1/evidence/{e.id}/file",
             "duplicateCandidates": matches or [], "verifiedProgressPct": None}
 
 def duplicate_matches(db, user, e):
-    allowed = project_query(db, user).with_entities(__import__("app.models", fromlist=["Project"]).Project.id)
+    allowed = project_query(db, user).with_entities(Project.id)
     candidates = db.query(Evidence).filter(Evidence.project_id.in_(allowed), Evidence.id != e.id).all()
     matches = []
     for other in candidates:
         delta = (int(e.perceptual_hash, 16) ^ int(other.perceptual_hash, 16)).bit_count()
         exact = e.sha256 == other.sha256
-        if exact or delta <= 5:
+        if exact or (delta <= 5 and e.perceptual_hash not in {"0000000000000000", "ffffffffffffffff"}):
             matches.append({"evidenceId": other.id, "projectId": other.project_id, "exact": exact,
                             "similarity": round(1-delta/64, 3), "requiresHumanReview": True})
     return matches[:50]
@@ -87,21 +88,26 @@ async def upload(project_id: int, file: UploadFile = File(...), request_key: str
     ext, mime = {"JPEG": ("jpg", "image/jpeg"), "PNG": ("png", "image/png"), "WEBP": ("webp", "image/webp")}[fmt]
     filename = f"{uuid.uuid4().hex}.{ext}"
     directory = Path(settings.UPLOAD_DIR).resolve()
-    directory.mkdir(parents=True, exist_ok=True)
+    if settings.EVIDENCE_STORAGE == "filesystem":
+        directory.mkdir(parents=True, exist_ok=True)
     target = directory / filename
     e = Evidence(project_id=project_id, uploaded_by=user.id, request_key=request_key, filename=filename,
                  sha256=digest, perceptual_hash=phash, mime_type=mime, size=len(raw), caption=caption,
                  lat=lat, lng=lng, distance_km=distance(lat, lng, project.lat, project.lng) if lat is not None else None)
     try:
-        with target.open("xb") as stream:
-            stream.write(raw)
+        if settings.EVIDENCE_STORAGE == "filesystem":
+            with target.open("xb") as stream:
+                stream.write(raw)
         db.add(e)
         db.flush()
+        db.add(EvidenceContent(evidence_id=e.id, payload=raw if settings.EVIDENCE_STORAGE == "database" else None,
+                              details={"locationSource": "not supplied" if lat is None else "user/device supplied; not proof of capture location"}))
         audit(db, user, "evidence.uploaded", project_id, evidenceId=e.id, sha256=digest)
         db.commit()
     except Exception:
         db.rollback()
-        target.unlink(missing_ok=True)
+        if settings.EVIDENCE_STORAGE == "filesystem":
+            target.unlink(missing_ok=True)
         raise
     return evidence_out(e, duplicate_matches(db, user, e))
 
@@ -117,6 +123,10 @@ def download(evidence_id: int, user=Depends(get_current_user), db: Session = Dep
     if not e:
         raise HTTPException(404, "Evidence not found")
     get_project(db, user, e.project_id)
+    if e.content is not None and e.content.payload is not None:
+        return Response(e.content.payload, media_type=e.mime_type,
+                        headers={"Content-Disposition": f'attachment; filename="evidence-{e.id}{Path(e.filename).suffix}"',
+                                 "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
     path = Path(settings.UPLOAD_DIR).resolve() / e.filename
     if not path.is_file() or path.parent != Path(settings.UPLOAD_DIR).resolve():
         raise HTTPException(404, "Evidence file unavailable")

@@ -1,5 +1,6 @@
 """Additive tables for access, evidence, workflow and reproducible analysis."""
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, JSON, UniqueConstraint, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, JSON, LargeBinary, UniqueConstraint, func
+from sqlalchemy.orm import relationship, deferred
 from app.database import Base
 
 class AccessGrant(Base):
@@ -44,6 +45,14 @@ class Evidence(Base):
     distance_km = Column(Float, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     __table_args__ = (UniqueConstraint("uploaded_by", "request_key"),)
+    content = relationship("EvidenceContent", uselist=False, back_populates="evidence", cascade="all, delete-orphan")
+
+class EvidenceContent(Base):
+    __tablename__ = "evidence_content"
+    evidence_id = Column(Integer, ForeignKey("evidence.id"), primary_key=True)
+    payload = deferred(Column(LargeBinary, nullable=True))
+    details = Column(JSON, nullable=False, default=dict)
+    evidence = relationship("Evidence", back_populates="content")
 
 class InspectionWorkflow(Base):
     __tablename__ = "inspection_workflows"

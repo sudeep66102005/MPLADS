@@ -137,3 +137,32 @@ def test_project_history_and_stale_update(client, headers):
     assert history[0]["source"] == "updated"
     assert history[0]["values"]["name"] == "Updated project"
     assert client.get("/api/v1/projects/2/revisions", headers=headers("mp")).status_code == 404
+
+def test_database_evidence_survives_without_upload_directory(client, headers, db, monkeypatch, tmp_path):
+    from app.core.config import settings
+    from app.operational_models import EvidenceContent
+    monkeypatch.setattr(settings,"EVIDENCE_STORAGE","database")
+    h=headers()
+    raw=image_bytes()
+    r=client.post("/api/v1/projects/1/photos",files={"file":("photo.png",raw,"image/png")},
+                  data={"request_key":"db-storage-photo"},headers=h)
+    assert r.status_code==201, r.text
+    eid=r.json()["id"]
+    assert db.get(EvidenceContent,eid).payload==raw
+    monkeypatch.setattr(settings,"UPLOAD_DIR",str(tmp_path/"does-not-exist"))
+    assert client.get(f"/api/v1/evidence/{eid}/file",headers=h).content==raw
+
+def test_flat_different_images_not_marked_duplicates(client, headers):
+    h=headers()
+    for key,color in [("flat-blue-image","blue"),("flat-red-image","red")]:
+        r=client.post("/api/v1/projects/1/photos",files={"file":("photo.png",image_bytes(color),"image/png")},
+                      data={"request_key":key},headers=h)
+        assert r.status_code==201
+    assert r.json()["duplicateCandidates"]==[]
+
+def test_upload_size_limit(client, headers, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings,"MAX_UPLOAD_BYTES",10)
+    assert client.post("/api/v1/projects/1/photos",files={"file":("photo.png",image_bytes(),"image/png")},
+                       data={"request_key":"oversized-photo"},headers=headers()).status_code==413
+
