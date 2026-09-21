@@ -65,6 +65,9 @@ class GrantInput(CamelModel):
     constituency_id: int
     agency_id: int | None = None
 
+class UserStatusInput(CamelModel):
+    is_active: bool
+
 class ConstituencyInput(CamelModel):
     name: str = Field(min_length=1, max_length=200)
     state: str = Field(min_length=1, max_length=100)

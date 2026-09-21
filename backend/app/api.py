@@ -13,7 +13,7 @@ from app.database import get_db
 from app.core.config import settings
 from app.core.security import get_current_user, hash_password, verify_password, create_access_token, oauth2_scheme, decode_access_token
 from app.schemas import LoginRequest, LoginResponse, UserOut
-from app.contracts import ProjectInput, ProjectPatch, UserInput, GrantInput, AgencyInput, ConstituencyInput, MilestoneInput, GapInput
+from app.contracts import ProjectInput, ProjectPatch, UserInput, GrantInput, UserStatusInput, AgencyInput, ConstituencyInput, MilestoneInput, GapInput
 from app.access import project_query, get_project, require, role, MANAGERS, GLOBAL, OFFICER, AGENCY, constituency_ids, check_constituency, audit
 from app.services import project_out, create_project, score, analyze, kpis, agency_out
 from app.operational_models import AccessGrant, AnalysisSnapshot, AuditEvent, LoginAttempt, RevokedToken, Evidence
@@ -102,6 +102,39 @@ def grant(user_id: int, payload: GrantInput, user=Auth, db: Session = DB):
         audit(db, user, "access.granted", userId=user_id, **payload.model_dump())
         db.commit()
     return {"status": "granted"}
+
+@router.patch("/users/{user_id}", response_model=UserOut)
+def user_status(user_id: int, payload: UserStatusInput, user=Auth, db: Session = DB):
+    require(user, {"Admin"})
+    target = db.get(m.User, user_id)
+    if not target:
+        raise HTTPException(404, "User not found")
+    if user.id == target.id and not payload.is_active:
+        raise HTTPException(409, "You cannot deactivate your own administrator account")
+    target.is_active = payload.is_active
+    audit(db, user, "user.status_changed", userId=user_id, isActive=payload.is_active)
+    db.commit()
+    return target
+
+@router.get("/users/{user_id}/grants")
+def user_grants(user_id: int, user=Auth, db: Session = DB):
+    require(user, {"Admin"})
+    target = db.get(m.User, user_id)
+    if not target:
+        raise HTTPException(404, "User not found")
+    return {"homeConstituencyId": target.constituency_id, "additional": [
+        {"id": g.id, "constituencyId": g.constituency_id, "agencyId": g.agency_id}
+        for g in db.query(AccessGrant).filter_by(user_id=user_id)]}
+
+@router.delete("/users/{user_id}/grants/{grant_id}", status_code=204)
+def revoke_grant(user_id: int, grant_id: int, user=Auth, db: Session = DB):
+    require(user, {"Admin"})
+    grant = db.query(AccessGrant).filter_by(id=grant_id, user_id=user_id).first()
+    if not grant:
+        raise HTTPException(404, "Access grant not found")
+    audit(db, user, "access.revoked", userId=user_id, constituencyId=grant.constituency_id, agencyId=grant.agency_id)
+    db.delete(grant)
+    db.commit()
 
 @router.get("/projects")
 def projects(user=Auth, db: Session = DB, page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=100),
