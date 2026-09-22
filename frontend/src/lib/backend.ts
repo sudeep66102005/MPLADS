@@ -16,7 +16,7 @@ export async function request<T>(base: string, token: string, path: string, opti
   if (token) headers.set("Authorization", "Bearer " + token);
   if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000);
+  const timer = setTimeout(() => controller.abort(), 90000);
   try {
     const response = await fetch(base + "/api/v1" + path, { ...options, headers, signal: controller.signal, cache: "no-store" });
     if (!response.ok) {
@@ -25,6 +25,10 @@ export async function request<T>(base: string, token: string, path: string, opti
       throw new Error(response.status === 401 ? "Session unavailable. Sign in again. " + detail : detail);
     }
     return response.status === 204 ? undefined as T : response.json();
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw new Error("The free server is taking longer to wake up. Wait a moment, then try again.");
+    if (e instanceof TypeError) throw new Error("Could not reach the app server. Check your connection and try again; the free server may still be starting.");
+    throw e;
   } finally { clearTimeout(timer); }
 }
 

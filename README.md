@@ -1,150 +1,82 @@
-**Live deployment:** [https://sudeep66102005.github.io/MPLADS/](https://sudeep66102005.github.io/MPLADS/)
+# MPLADS Monitoring & Audit Intelligence — SIH demo
 
-# MPLADS AI Monitoring & Audit Intelligence
+A working monitoring workflow for a six-person SIH team: web dashboard, Android/iPhone field interface, FastAPI backend and PostgreSQL.
 
-_SIH26102 · An explainable AI decision-support layer on top of eSAKSHI /
-MPLADS — smarter oversight, greater impact._
+- [Open the app](https://sudeep66102005.github.io/MPLADS/)
+- [Field inspections](https://sudeep66102005.github.io/MPLADS/field/)
+- [API health](https://mplads-api-eeux.onrender.com/health)
+- [API documentation](https://mplads-api-eeux.onrender.com/docs)
+- [Ten delivery checkpoints](DELIVERY.md)
+- [Deployment and operations](docs/DEPLOYMENT.md)
 
-## What this is
+## Try the demonstration
 
-MPLADS (Members of Parliament Local Area Development Scheme) generates a
-constant stream of project, financial, progress and photo data across
-every MP's constituency in India. Today that data lives in **eSAKSHI**,
-the Government of India's live MPLADS platform — which stores and reports
-it well, but does not rank, predict, or explain it. A human still has to
-manually go through hundreds of projects to find the ones that need
-attention.
+The connection is configured automatically. The free API may take 50–90 seconds to wake after inactivity. If the first request times out, wait and retry.
 
-This project adds an **AI intelligence layer on top of eSAKSHI** — not a
-replacement. It reads the same project/financial/progress/photo/location
-data, applies rule-based checks and ML models, and produces one clear,
-explainable output: an ordered priority list of which projects a human
-officer should look at first, and exactly why. It never declares fraud —
-only "this needs a closer human look, and here is what to check." The
-final decision always stays with the authorized official.
+| Role | Username | Password |
+| --- | --- | --- |
+| Administrator | `admin` | `admin123` |
+| MP, assigned constituency | `arjun.mehta` | `demo123` |
+| Field officer | `inspector.sharma` | `demo123` |
+| District authority | `nodal.bhopal` | `demo123` |
 
-```
-RAW DATA → AI ANALYSIS → PRIORITY LIST → HUMAN REVIEW → ACTION
-```
+These are intentionally public **synthetic-demo accounts**. Never upload confidential documents, personal information or actual government records into this public demo. A real deployment needs a separate database with DEMO_MODE=false and private accounts.
 
-## Research basis — what eSAKSHI already does, and the gap this fills
+Suggested demo: sign in as admin → Projects → open Construction of Community Hall → assign Ramesh Sharma → open Field app → sign in as inspector → record findings/progress and a sample photo → Save on device → Submit for review → return as admin → Inspections → review and close. Agencies, Coverage and Reports provide analysis of the same saved records.
 
-eSAKSHI already provides: stakeholder logins (MP / MoSPI / State & District
-Nodal Authorities / Implementing Agencies), work recommendation and fund
-workflows, a public dashboard of works recommended/sanctioned/completed
-with expenditure drill-downs, photo uploads for completed works, and public
-reports (fund releases, expenditure, work registers, non-progress works).
-(Source: [mplads.gov.in dashboard](https://mplads.gov.in/mplads/Dashboard/DashBoard.aspx),
-MPLADS portal user manual and FAQ, and Lok Sabha/Rajya Sabha unstarred
-question replies from the Ministry of Statistics & Programme Implementation
-on eSAKSHI's digital fund-flow and monitoring capabilities, e.g.
-[sansad.in AU2887](https://sansad.in/getFile/lsapps/loksabhaquestions/annex/188/AU2887_YqZH4s.pdf?source=lsapps).)
+## Screens and scope
 
-What it does **not** do today: connect expenditure and physical-progress
-records to flag abnormal patterns, rank/prioritize which projects deserve
-attention first, verify photos against reported progress or catch
-duplicates, predict which on-track projects are likely to slip before they
-do, roll individual project records up into an agency-level performance
-score, link past spending to real local need (development gaps), or close
-an inspection/feedback loop. These seven gaps map directly to the seven AI
-features below.
+| Screen | Working behavior |
+| --- | --- |
+| Sign in | Configured API connection, role-based account login; no server URL needed |
+| Overview / attention centre | Scoped counts, status distribution, funds and project priority |
+| Projects | Search, create, update with conflict detection, import CSV, explanations, milestones and revision history |
+| Project evidence | Private photo upload/download, duplicate candidates, supplied-location distance |
+| Monitoring checks | Cost benchmark with source, nearby similar-work candidates, documentation completeness |
+| Map | Actual accessible project coordinates on OpenStreetMap |
+| Agencies | Visible project count, completion rate, current overdue days and average rule-based health |
+| Coverage | Dated service-needs measurements with source and consistent units |
+| Inspections | Assignment, draft, submission, clarification, closure, reopening and dossier export |
+| Reports | Printable project report, CSV, fund summaries and audit export |
+| Administration | Constituencies, agencies, users, activation/deactivation and additional jurisdiction grants |
+| Field app | Officer assignments, device drafts, queued photos, optional GPS and authenticated sync |
+| Sample dashboard | Original visual prototype, explicitly marked as illustrative data |
 
-## The 7 AI features (and where each lives in this repo)
+## Analysis — what is and is not claimed
 
-| # | Feature | Frontend | Backend |
-|---|---|---|---|
-| 1 | AI Project Health Score | Project Detail page, Projects list | `ai_engine/scoring.py::compute_health_score` |
-| 2 | AI Delay Prediction | Project Detail, Map View popup | `ai_engine/scoring.py::compute_delay_probability` |
-| 3 | AI Progress & Photo Verification | Project Detail "Photos" tab (UI only) | not implemented — needs a CV pipeline (see backend README) |
-| 4 | Automatic Anomaly Detection | MP Attention Centre, Project Detail risk indicators | `ai_engine/scoring.py::detect_anomalies` |
-| 5 | Implementing Agency Performance Score | `/agency-performance` | `routers/agencies.py` (mock data — roll-up logic not yet computed from projects) |
-| 6 | Constituency Development Gap Analysis | `/constituency-insights` | `routers/constituencies.py` (mock data) |
-| 7 | MP Attention Centre | `/mp-attention-centre` | composes projects + agencies + gaps endpoints |
+Health/priority use versioned rules with explanations. Delay-model training and safe JSON inference are provided, including temporal holdout and baseline evaluation, but no trained real-world model is deployed. Without one, probabilities/delay predictions remain unavailable. Duplicate images/work and possible splitting are candidates for human investigation. Cost comparisons require a supplied comparable benchmark. Record completeness is not a legal compliance certification. No image-derived physical completion percentage is claimed.
 
-## Team structure (as given)
+Data enters through validated CSV or API writes. Live eSAKSHI integration requires an approved data contract and credentials; the app does not pretend to have that connection.
 
-| Person | Role | Owns |
-|---|---|---|
-| 1 | ML / Prediction | Project Health Score, Delay Prediction, model training & evaluation |
-| 2 | Vision (Computer Vision) | Photo verification, image analysis, duplicate/unrelated photo & geo-location validation |
-| 3 | Data & Anomaly | Data collection/processing, anomaly detection, agency performance, data pipeline |
-| 4 | Backend Developer | FastAPI backend, database design, APIs & integration, auth & security |
-| 5 | Dashboard Developer | React/Next.js frontend, dashboard UI/UX, charts, maps, role-based views |
-| 6 | Mobile / Integration | Field officer mobile interface, inspection workflow, system integration, deployment |
+## Architecture
 
-## System architecture
-
-```
-eSAKSHI / MPLADS DATA  →  BACKEND API (Python/FastAPI)  →  DATABASE (PostgreSQL + PostGIS)
-                                    ↓                              ↕
-                            AI ENGINE (ML + Vision)  ←──────────────
-                                    ↓
-                        RISK / AI RESULTS (0-100 score, explanations)
-                                    ↓
-              ┌─────────────────────┴─────────────────────┐
-       WEB DASHBOARD (React/Next.js)              MOBILE APP (optional, field officer)
+```text
+GitHub Pages: Next.js / React / TypeScript
+  ├─ Dashboard (authenticated API calls)
+  └─ Field PWA (IndexedDB drafts/photos; explicit synchronization)
+                 │ HTTPS + bearer token
+Render Free: FastAPI / SQLAlchemy / Alembic / Pillow
+                 │ private database connection
+Render PostgreSQL 16: records, roles, audit, analysis history and evidence bytes
 ```
 
-## Repository layout
+No paid AI API, app-store account, PostGIS extension or persistent disk is required for this demo. Photo storage has a 100 MiB application quota inside the free 1 GB database. The created database expires **22 October 2026**. See the operations guide before expiry.
 
-```
-MPLADS/
-├── .github/workflows/deploy.yml   Builds + publishes the dashboard to GitHub Pages
-├── frontend/                      Next.js + TypeScript + Tailwind dashboard (see frontend/README.md)
-└── backend/                       FastAPI backend + rule-based AI scoring skeleton (see backend/README.md)
-```
+## Local development
 
-## Live deployment
+Backend: follow [backend/README.md](backend/README.md), using Python 3.12. SQLite is supported locally; CI tests PostgreSQL 16 too.
 
-The dashboard is built as a static site by GitHub Actions
-(`.github/workflows/deploy.yml`) and published to GitHub Pages. The build
-pipeline (`npm install` → lint → `next build` → upload artifact) is passing;
-it prerenders 24 static pages including one per project.
+Frontend: Node.js 22, `cd frontend`, `npm ci`, `npm run dev`. For local backend development set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` in an ignored `.env.local`; that overrides public deployment configuration. Use the same host in backend CORS settings. `npm run build` exports static files to `frontend/out`.
 
-### ⚠️ One-time setup required (repo admin)
+Verification: `pytest -q` in backend (install both requirements-dev.txt and requirements-ml.txt for all 38 tests); `npm run build`, `npm run lint`, `npm audit` in frontend. No sensitive environment values belong in Git.
 
-Pages must be switched on once before the deploy step can publish:
+## Team ownership
 
-> **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
->
-> https://github.com/sudeep66102005/MPLADS/settings/pages
+1. ML: collect approved historical outcomes, evaluate delay models, document limitations.
+2. Vision: curate labeled images and review duplicate false positives; validate any future vision model.
+3. Data: approved imports, data quality, sourced coverage and comparable cost benchmarks.
+4. Backend: permissions, migrations, inspection state machine and API contracts.
+5. Dashboard: user research, charts, maps, accessibility and report usability.
+6. Field/integration: PWA offline workflow, device testing, free-host operations and releases.
 
-Then re-run the workflow (**Actions → Deploy Dashboard to GitHub Pages →
-Re-run jobs**). After that, every push to `frontend/**` redeploys automatically.
-
-This step cannot be automated: creating a Pages site requires repo-admin
-rights, and the Actions `GITHUB_TOKEN` is explicitly not permitted to do it
-(it can deploy to an existing Pages site, but not create one) — the deploy job
-fails with `HttpError: Not Found` until it's enabled.
-
-**Live URL once enabled:** https://sudeep66102005.github.io/MPLADS/
-
-Because the site is served from a `/MPLADS/` sub-path, the build sets
-`basePath`/`assetPrefix` from a `BASE_PATH` env var. `BASE_PATH` is unset
-locally, so `npm run dev` still serves from `/`.
-
-## Sandbox limitation note
-
-This build was authored in a network-restricted sandbox: outbound requests
-to the npm registry and PyPI both returned `403` through the environment's
-proxy (`INTEGRATIONS_ONLY` network mode), so `npm install`, `create-next-app`,
-and `pip install` could not be run there. The map deliberately uses key-free
-tile providers (OpenStreetMap + Esri World Imagery) so that no API key or paid
-account is needed to get it rendering.
-
-**The frontend is now genuinely build-verified** — the GitHub Actions workflow
-runs `npm install` and `next build` on GitHub's runners and passes. That build
-caught three real type errors that per-file `tsc` in the sandbox could not
-(they needed the actual installed dependency types): a hand-rolled icon
-`ComponentType` incompatible with lucide's `LucideIcon`, a `KpiCard.trend` prop
-typed `string` but used as a boolean, and a missing `generateStaticParams` on
-the dynamic project route.
-
-**The backend is still NOT verified** — `pip install` and `pytest` have not been
-run anywhere. Only `python -m py_compile` (syntax) has passed. Run
-`cd backend && pip install -r requirements.txt && pytest` before trusting it. Every frontend and backend file was
-hand-authored to match what those tools would scaffold, and syntax was
-verified with the TypeScript/Python compilers where possible
-(`tsc`/`py_compile`). **Run `npm install && npm run build` (frontend) and
-`pip install -r requirements.txt && pytest` (backend) on a machine with
-normal internet access before treating this as verified-working code.**
+This release is an SIH pilot. Production adoption requires domain validation, independent security/load review, durable backups, approved data access and a sustainable hosting arrangement.

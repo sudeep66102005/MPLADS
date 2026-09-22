@@ -1,0 +1,10 @@
+# Never publish local credentials, database backups or runtime scratch files.
+.env
+.env.*
+!.env.example
+*.dump
+*.backup
+*.db
+*.db-shm
+*.db-wal
+import-timing.tmp

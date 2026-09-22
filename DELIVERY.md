@@ -11,7 +11,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 7. Dashboard integration: implemented and tested.
 8. Agencies, reports and sourced coverage: implemented and tested.
 9. End-to-end verification and fixes: implemented and tested.
-10. Deployment and release verification: planned.
+10. Free deployment and release configuration: implemented; final Pages acceptance checked after publication.
 
 ## Checkpoint 1
 Introduces the previously prepared operational backend foundation, explicit migrations, seeded demonstration mode, administrator bootstrap, persistent deployment configuration and SQLite/PostgreSQL CI. Subsequent checkpoints complete and harden each workflow on this foundation.
@@ -41,3 +41,10 @@ Added sourced cost benchmarks, scoped geographic/name duplicate-work candidates,
 
 ## Checkpoint 9
 Verified the browser workflow from authority assignment through officer device-save/submission and authority closure. Updated Next.js to 15.5.25 and PostCSS to 8.5.28, including the nested dependency, and locked dependencies; npm audit reports zero vulnerabilities. CI now runs model-training tests, enforces lint/audit and installs from the lockfile. Added a database evidence quota for free hosting and app icons. Local backend regression and static export passed.
+
+## Checkpoint 10
+Render API: https://mplads-api-eeux.onrender.com. The free PostgreSQL 16 database and free Docker web service were created; migrations and demo initialization succeeded. Runtime configuration connects the Pages frontend automatically, so normal sign-in needs no server address. GitHub CI for checkpoint 9 passed on SQLite/PostgreSQL and published the frontend. Final acceptance includes the deployed health endpoint, scoped sign-in, Pages workflow and live browser login.
+
+Cost boundary: only $0 Render plans were selected, with no disk or paid add-ons. The created free database expires on **22 October 2026**. Export/backup before expiry; permanent operation needs another persistence arrangement. No paid upgrade is authorized.
+
+This is a working SIH demonstration, not a production government system. No eSAKSHI credentials/data feed, validated real-data prediction accuracy, forensic photo verification or statutory compliance certification is available. Native store distribution is outside this release; the field app runs in Android/iOS browsers and supports home-screen installation.

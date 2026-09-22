@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Monitoring from "@/components/Monitoring";
 import Coverage from "@/components/Coverage";
 const LiveMap = dynamic(() => import("@/components/LiveMap"), {ssr:false});
+import {useServer} from "@/lib/use-server";
 import { normalizeServer, request, download } from "@/lib/backend";
 
 type Project = { id: string; name: string; code: string; constituency: string; agency: string; aiScore: number;
@@ -33,7 +34,7 @@ function Input({ label, name, type = "text", value, required = true }: { label: 
 }
 
 export default function Workspace({initialTab = "Overview"}: {initialTab?: string}) {
-  const [server, setServer] = useState(process.env.NEXT_PUBLIC_API_BASE_URL || "");
+  const {server,setServer,configured,loading} = useServer();
   const [base, setBase] = useState("");
   const [token, setToken] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -58,9 +59,6 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
   const isOfficer = user?.role === "Inspecting / Field Officer";
   const isAdmin = user?.role === "Admin";
 
-  useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_BASE_URL) setServer(localStorage.getItem("mplads-api-origin") || "");
-  }, []);
 
   async function run(action: () => Promise<void>) {
     setBusy(true); setError(""); setMessage("");
@@ -112,14 +110,14 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
       {message && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-emerald-800">{message}</div>}
       {busy && <p role="status" className="text-sm text-blue-700">Working…</p>}
       {!user ? <section className={card + " max-w-lg mx-auto"}>
-        <h2 className="text-xl font-semibold mb-2">Connect and sign in</h2>
-        <p className="mb-5 text-sm text-slate-600">Your administrator supplies the server address and account. If hosting is not set up, follow the backend setup guide in the repository.</p>
+        <h2 className="text-xl font-semibold mb-2">Sign in to MPLADS</h2>
+        <p className="mb-5 text-sm text-slate-600">Sign in with your assigned account. The free demo may take about a minute to wake up after being idle.</p>
         <form onSubmit={signIn} className="space-y-4">
-          <label className="block text-sm">Server address<input className={control + " mt-1"} type="url" placeholder="https://your-api.example.com" value={server} onChange={e => setServer(e.target.value)} required /></label>
+          {!configured && !loading && <details className="text-sm"><summary className="cursor-pointer text-slate-600">Connection setup</summary><label className="block mt-3 text-sm">Server address<input className={control + " mt-1"} type="url" placeholder="https://your-api.example.com" value={server} onChange={e => setServer(e.target.value)} required /></label></details>}
           <Input label="Username" name="username" /><Input label="Password" name="password" type="password" />
-          <button className={button} disabled={busy}>Sign in</button>
+          <button className={button} disabled={busy || loading}>{loading ? "Preparing sign in…" : "Sign in"}</button>
         </form>
-        <a className="mt-5 block text-sm text-blue-700 underline" href="https://github.com/sudeep66102005/MPLADS/blob/feature/mplads-ai-dashboard/backend/README.md">Backend setup guide</a>
+        <p className="mt-5 text-xs text-slate-500">SIH demonstration: use synthetic records only. Your team’s demo accounts are listed in the project README.</p>
       </section> : <>
         <div className={"rounded-lg px-4 py-3 text-sm " + (demo ? "bg-amber-100 text-amber-950" : "bg-blue-50 text-blue-900")}>
           {demo ? "Connected to a synthetic demonstration database." : "Connected to your configured database."} <span className="break-all">{base}</span>

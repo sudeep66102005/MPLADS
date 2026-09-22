@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import {useServer} from "@/lib/use-server";
 import { normalizeServer, request } from "@/lib/backend";
 import { Draft, Inspection, clearLocal, localDrafts, saveLocal } from "@/lib/field-store";
 
@@ -12,7 +13,7 @@ type User = { id: number; displayName: string; role: string };
 type Project = { id: string; name: string; code: string };
 
 export default function FieldApp() {
-  const [server, setServer] = useState(process.env.NEXT_PUBLIC_API_BASE_URL || "");
+  const {server,setServer,configured,loading} = useServer();
   const [base, setBase] = useState(""); const [token, setToken] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [rows, setRows] = useState<Draft[]>([]); const [current, setCurrent] = useState<Draft | null>(null);
@@ -24,7 +25,6 @@ export default function FieldApp() {
     setOnline(navigator.onLine);
     const update = () => setOnline(navigator.onLine);
     window.addEventListener("online", update); window.addEventListener("offline", update);
-    if (!process.env.NEXT_PUBLIC_API_BASE_URL) setServer(localStorage.getItem("mplads-api-origin") || "");
     if ("serviceWorker" in navigator) navigator.serviceWorker.register(basePath + "/field-sw.js", { scope: basePath + "/" }).then(async () => {
       const registration = await navigator.serviceWorker.ready;
       const assets = performance.getEntriesByType("resource").map(r => r.name).filter(url => new URL(url).pathname.startsWith(basePath + "/_next/static/"));
@@ -99,10 +99,10 @@ export default function FieldApp() {
       {busy && <p role="status">Working…</p>}
       {!user ? <form className="bg-white border rounded-xl p-5 space-y-4" onSubmit={signIn}>
         <h2 className="text-xl font-semibold">Officer sign in</h2>
-        <label className="block">Server address<input required type="url" className={control} value={server} onChange={e => setServer(e.target.value)} /></label>
+        {!configured && !loading && <details><summary>Connection setup</summary><label className="block mt-3">Server address<input required type="url" className={control} value={server} onChange={e => setServer(e.target.value)} /></label></details>}
         <label className="block">Username<input required name="username" autoComplete="username" className={control} /></label>
         <label className="block">Password<input required name="password" type="password" autoComplete="current-password" className={control} /></label>
-        <button className={button} disabled={busy || !online}>Sign in</button>
+        <button className={button} disabled={busy || !online || loading}>Sign in</button>
       </form> : <>
         <div className="flex flex-wrap justify-between gap-3"><p>{user.displayName}</p><button className="underline text-blue-700" disabled={busy} onClick={() => run(async () => {
           if (current?.dirty) await persist(current);
