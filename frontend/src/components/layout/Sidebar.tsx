@@ -30,7 +30,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/workspace", label: "Connected Workspace", icon: ListChecks },
+  { href: "/demo", label: "Sample Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projects", icon: ListChecks },
   { href: "/priority-queue", label: "AI Priority Queue", icon: AlertTriangle, badge: priorityQueueCount },
   { href: "/map", label: "Map View", icon: MapPin },
