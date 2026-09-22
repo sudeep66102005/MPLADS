@@ -189,3 +189,11 @@ def test_inspection_clarification_reopen_and_conflicts(client, headers, db):
     assert client.post(path+"/review", json=review, headers=admin).json()["version"] == 6
     assert client.post(path+"/review", json=review, headers=admin).status_code == 409
     assert client.patch(path, json={**body,"version":6}, headers=officer).json()["status"] == "Draft"
+
+def test_database_upload_quota(client, headers, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings,"EVIDENCE_STORAGE","database")
+    monkeypatch.setattr(settings,"EVIDENCE_QUOTA_BYTES",10)
+    r=client.post("/api/v1/projects/1/photos",files={"file":("photo.png",image_bytes(),"image/png")},data={"request_key":"quota-test-upload"},headers=headers())
+    assert r.status_code==413
+    assert client.get("/api/v1/projects/1/photos",headers=headers()).json()==[]

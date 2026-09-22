@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     UPLOAD_DIR: str = "./data/uploads"
     EVIDENCE_STORAGE: str = "filesystem"
+    EVIDENCE_QUOTA_BYTES: int = 100 * 1024 * 1024
     MAX_UPLOAD_BYTES: int = 8 * 1024 * 1024
     AUTO_CREATE_TABLES: bool = True
     DEMO_MODE: bool = False

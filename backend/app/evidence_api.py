@@ -9,6 +9,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import func, text
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
@@ -84,6 +85,12 @@ async def upload(project_id: int, file: UploadFile = File(...), request_key: str
         if previous.project_id != project_id or previous.sha256 != digest or previous.caption != caption or previous.lat != lat or previous.lng != lng:
             raise HTTPException(409, "Request key already used for different evidence")
         return evidence_out(previous, duplicate_matches(db, user, previous))
+    if settings.EVIDENCE_STORAGE == "database":
+        if db.bind.dialect.name == "postgresql":
+            db.execute(text("SELECT pg_advisory_xact_lock(741852963)"))
+        used = db.query(func.coalesce(func.sum(Evidence.size), 0)).scalar()
+        if used + len(raw) > settings.EVIDENCE_QUOTA_BYTES:
+            raise HTTPException(413, "Evidence storage quota reached. Export records and ask the administrator to review storage.")
     fmt, phash = inspect_image(raw)
     ext, mime = {"JPEG": ("jpg", "image/jpeg"), "PNG": ("png", "image/png"), "WEBP": ("webp", "image/webp")}[fmt]
     filename = f"{uuid.uuid4().hex}.{ext}"

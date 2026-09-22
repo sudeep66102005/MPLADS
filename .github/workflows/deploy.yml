@@ -38,22 +38,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # NOTE: npm caching is deliberately NOT enabled here. `cache: npm`
-      # requires a committed package-lock.json to hash, and this repo has none
-      # yet — setup-node hard-fails with "Some specified paths were not
-      # resolved" rather than degrading gracefully. Once a lockfile is
-      # committed, add `cache: npm` + `cache-dependency-path:
-      # frontend/package-lock.json` and switch `npm install` to `npm ci`.
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: Install dependencies
-        run: npm install
-
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
       - name: Lint
         run: npm run lint
-        continue-on-error: true
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
 
       - name: Build static site
         env:

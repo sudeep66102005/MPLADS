@@ -10,7 +10,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 6. Inspection workflow and field interface: implemented and tested.
 7. Dashboard integration: implemented and tested.
 8. Agencies, reports and sourced coverage: implemented and tested.
-9. End-to-end verification and fixes: planned.
+9. End-to-end verification and fixes: implemented and tested.
 10. Deployment and release verification: planned.
 
 ## Checkpoint 1
@@ -38,3 +38,6 @@ The main entry now opens the connected dashboard, with scoped overview, priority
 
 ## Checkpoint 8
 Added sourced cost benchmarks, scoped geographic/name duplicate-work candidates, documentation-completeness checks, recorded financial history, agency comparisons, printable reports and coverage measurement entry with provenance/units. Duplicate or split-work flags are review candidates; no fraud determination or statutory compliance claim is made. Scores returned to the dashboard use current dates rather than stale cached values.
+
+## Checkpoint 9
+Verified the browser workflow from authority assignment through officer device-save/submission and authority closure. Updated Next.js to 15.5.25 and PostCSS to 8.5.28, including the nested dependency, and locked dependencies; npm audit reports zero vulnerabilities. CI now runs model-training tests, enforces lint/audit and installs from the lockfile. Added a database evidence quota for free hosting and app icons. Local backend regression and static export passed.

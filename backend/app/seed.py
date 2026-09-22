@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 def seed():
-    """Drop all tables and re-create with seed data."""
+    """Populate an empty demonstration database; never reset existing records."""
     from app.core.config import settings
     from app import operational_models
     if not settings.DEMO_MODE:

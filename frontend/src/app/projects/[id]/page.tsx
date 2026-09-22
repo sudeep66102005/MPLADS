@@ -129,8 +129,8 @@ function ScoreCard({
   );
 }
 
-export default function ProjectAnalysisPage({ params }: { params: { id: string } }) {
-  const project = getProjectById(params.id);
+export default async function ProjectAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
+  const project = getProjectById((await params).id);
   if (!project) notFound();
 
   const d = getProjectDetail(project);
