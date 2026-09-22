@@ -7,7 +7,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 3. Project management and imports: implemented and tested.
 4. Explainable scoring and analysis history: implemented and tested.
 5. Photo evidence and duplicate checks: implemented and tested.
-6. Inspection workflow and field interface: planned.
+6. Inspection workflow and field interface: implemented and tested.
 7. Dashboard integration: planned.
 8. Agencies, reports and sourced coverage: planned.
 9. End-to-end verification and fixes: planned.
@@ -29,3 +29,6 @@ Completed versioned rule explanations and source-timestamp preservation. Added s
 
 ## Checkpoint 5
 Added optional database-backed photo storage for free hosts, authenticated original downloads, bounded image validation and duplicate-check safeguards for flat images. Evidence regression tests verify persistence independent of the filesystem and enforce authorization and upload limits.
+
+## Checkpoint 6
+Added the Android/iPhone browser field app with explicit device draft saves, queued photos, GPS attachment, authenticated synchronization, version-conflict protection and authority review/reopen workflow. Offline editing works while the signed-in app remains open; reopening requires an online sign-in before private drafts can be recovered. Device data can be cleared per account. The service worker caches public application files only. State-machine regression covers clarification, reopening, stale updates and unauthorized submission.

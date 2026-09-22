@@ -166,3 +166,26 @@ def test_upload_size_limit(client, headers, monkeypatch):
     assert client.post("/api/v1/projects/1/photos",files={"file":("photo.png",image_bytes(),"image/png")},
                        data={"request_key":"oversized-photo"},headers=headers()).status_code==413
 
+
+def test_inspection_clarification_reopen_and_conflicts(client, headers, db):
+    admin, officer = headers(), headers("officer")
+    oid = db.query(User).filter_by(username="officer").one().id
+    assignment = {"projectId": 1, "inspectorId": oid, "inspectionDate": str(date.today()), "requestKey": "inspection-state-test"}
+    iid = client.post("/api/v1/inspections", json=assignment, headers=admin).json()["id"]
+    path = f"/api/v1/inspections/{iid}"
+    body = {"version": 1, "findings": "Observed foundations on site.", "physicalProgressObservedPct": 25}
+    assert client.post(path+"/submit", json=body, headers=admin).status_code == 403
+    assert client.post(path+"/submit", json={**body,"evidenceIds":[99999]}, headers=officer).status_code == 422
+    assert client.post(path+"/submit", json=body, headers=officer).json()["version"] == 2
+    assert client.patch(path, json={**body,"version":2}, headers=officer).status_code == 409
+    review = {"version":2,"decision":"Needs clarification","outcome":"Needs evidence","note":"Please attach a current site photo."}
+    assert client.post(path+"/review", json=review, headers=admin).json()["status"] == "Needs clarification"
+    assert client.post(path+"/submit", json={**body,"version":3}, headers=officer).json()["version"] == 4
+    review.update(version=4,decision="Closed",outcome="Needs evidence")
+    assert client.post(path+"/review", json=review, headers=admin).status_code == 422
+    review.update(outcome="Resolved")
+    assert client.post(path+"/review", json=review, headers=admin).json()["status"] == "Closed"
+    review.update(version=5,decision="Reopened")
+    assert client.post(path+"/review", json=review, headers=admin).json()["version"] == 6
+    assert client.post(path+"/review", json=review, headers=admin).status_code == 409
+    assert client.patch(path, json={**body,"version":6}, headers=officer).json()["status"] == "Draft"
