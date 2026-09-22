@@ -7,7 +7,7 @@ import Monitoring from "@/components/Monitoring";
 import Coverage from "@/components/Coverage";
 const LiveMap = dynamic(() => import("@/components/LiveMap"), {ssr:false});
 import {useServer} from "@/lib/use-server";
-import { normalizeServer, request, download } from "@/lib/backend";
+import { normalizeServer, request, download, connectServer } from "@/lib/backend";
 
 type Project = { id: string; name: string; code: string; constituency: string; agency: string; aiScore: number;
   aiHealthScore: number; physicalProgressPct: number; financialProgressPct: number; expenditureCr: number;
@@ -62,7 +62,7 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
 
   async function run(action: () => Promise<void>) {
     setBusy(true); setError(""); setMessage("");
-    try { await action(); } catch (e) { setError(e instanceof Error ? e.message : "Request failed"); }
+    try { await action(); } catch (e) { setMessage(""); setError(e instanceof Error ? e.message : "Request failed"); }
     finally { setBusy(false); }
   }
   const api = <T,>(path: string, options?: RequestInit) => request<T>(base, token, path, options);
@@ -83,12 +83,15 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
     const values = fields(event);
     await run(async () => {
       const origin = normalizeServer(server);
+      setMessage("Connecting to server… Free hosting may take up to 90 seconds to wake up.");
+      const health = await connectServer(origin);
+      setMessage("Server connected. Signing in…");
       const result = await request<{ accessToken: string }>(origin, "", "/auth/login", { method: "POST", body: JSON.stringify(values) });
       const me = await request<User>(origin, result.accessToken, "/auth/me");
-      const health = await fetch(origin + "/health").then(r => r.json());
       setBase(origin); setToken(result.accessToken); setUser(me); setDemo(health.demoMode);
       localStorage.setItem("mplads-api-origin", origin);
       await load(origin, result.accessToken, me);
+      setMessage("");
     });
   }
   async function signOut() {
@@ -118,6 +121,7 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
           <button className={button} disabled={busy || loading}>{loading ? "Preparing sign in…" : "Sign in"}</button>
         </form>
         <p className="mt-5 text-xs text-slate-500">SIH demonstration: use synthetic records only. Your team’s demo accounts are listed in the project README.</p>
+        {configured && <a className="mt-3 inline-block text-sm text-blue-700 underline" href={server + "/health"} target="_blank" rel="noreferrer">Open server status</a>}
       </section> : <>
         <div className={"rounded-lg px-4 py-3 text-sm " + (demo ? "bg-amber-100 text-amber-950" : "bg-blue-50 text-blue-900")}>
           {demo ? "Connected to a synthetic demonstration database." : "Connected to your configured database."} <span className="break-all">{base}</span>

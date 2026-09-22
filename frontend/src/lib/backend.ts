@@ -1,5 +1,24 @@
 export type JsonObject = Record<string, unknown>;
 
+/** Retry only this public GET while a free host wakes up, never a write or login. */
+export async function connectServer(base: string): Promise<{demoMode: boolean}> {
+  const deadline = Date.now() + 90000;
+  do {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), Math.max(1, Math.min(10000, deadline - Date.now())));
+    try {
+      const response = await fetch(base + "/health", {signal: controller.signal, cache: "no-store"});
+      if (response.ok) {
+        const health = await response.json();
+        if (health.status === "ok") return {demoMode: health.demoMode === true};
+      }
+    } catch { /* Network errors during startup can be retried safely for this GET. */ }
+    finally { clearTimeout(timer); }
+    if (Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, Math.min(2000, deadline - Date.now())));
+  } while (Date.now() < deadline);
+  throw new Error("Cannot connect to the server yet. Wait a moment and try again. If this continues, open the server status link below to check whether your browser can reach it.");
+}
+
 export function normalizeServer(value: string): string {
   const url = new URL(value.trim());
   if (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))) {

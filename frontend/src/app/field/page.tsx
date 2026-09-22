@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {useServer} from "@/lib/use-server";
-import { normalizeServer, request } from "@/lib/backend";
+import { normalizeServer, request, connectServer } from "@/lib/backend";
 import { Draft, Inspection, clearLocal, localDrafts, saveLocal } from "@/lib/field-store";
 
 const control = "w-full rounded-lg border border-slate-300 bg-white p-3";
@@ -34,13 +34,16 @@ export default function FieldApp() {
   }, []);
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(""); setNotice("");
-    try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to complete action"); }
+    try { await fn(); } catch (e) { setNotice(""); setError(e instanceof Error ? e.message : "Unable to complete action"); }
     finally { setBusy(false); }
   }
   async function signIn(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const values = Object.fromEntries(new FormData(e.currentTarget));
     await run(async () => {
       const b = normalizeServer(server);
+      setNotice("Connecting to server… Free hosting may take up to 90 seconds to wake up.");
+      await connectServer(b);
+      setNotice("Server connected. Signing in…");
       const auth = await request<{accessToken: string}>(b, "", "/auth/login", {method: "POST", body: JSON.stringify(values)});
       const me = await request<User>(b, auth.accessToken, "/auth/me");
       if (me.role !== "Inspecting / Field Officer") throw new Error("Use a field officer account. Managers review inspections in the workspace.");
@@ -50,6 +53,7 @@ export default function FieldApp() {
       const next = assigned.map(i => stored.find(d => d.inspection.id === i.id && d.dirty) || {key: key + i.id, inspection: i, photos: [], savedAt: "", dirty: false});
       setBase(b); setToken(auth.accessToken); setUser(me); setRows(next); setProjects(p);
       localStorage.setItem("mplads-api-origin", b);
+      setNotice("");
     });
   }
   function update(d: Draft) { setCurrent(d); setRows(old => old.map(r => r.key === d.key ? d : r)); }
@@ -103,6 +107,7 @@ export default function FieldApp() {
         <label className="block">Username<input required name="username" autoComplete="username" className={control} /></label>
         <label className="block">Password<input required name="password" type="password" autoComplete="current-password" className={control} /></label>
         <button className={button} disabled={busy || !online || loading}>Sign in</button>
+        {configured && <a className="block text-sm text-blue-700 underline" href={server + "/health"} target="_blank" rel="noreferrer">Open server status</a>}
       </form> : <>
         <div className="flex flex-wrap justify-between gap-3"><p>{user.displayName}</p><button className="underline text-blue-700" disabled={busy} onClick={() => run(async () => {
           if (current?.dirty) await persist(current);
