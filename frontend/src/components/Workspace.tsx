@@ -3,6 +3,8 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Monitoring from "@/components/Monitoring";
+import Coverage from "@/components/Coverage";
 const LiveMap = dynamic(() => import("@/components/LiveMap"), {ssr:false});
 import { normalizeServer, request, download } from "@/lib/backend";
 
@@ -13,7 +15,7 @@ type Inspection = { id: number; projectId: number; inspectorId: number; status: 
   findings: string; physicalProgressObservedPct: number | null; evidenceIds: number[]; checklist: Record<string, boolean>;
   outcome: string | null; reviewNote: string | null };
 type User = { id: number; username: string; displayName: string; role: string; isActive: boolean };
-type Named = { id: number | string; name: string };
+type Named = { id: number | string; name: string; projectsCount?:number; completionRatePct?:number; avgDelayDays?:number; aiScore?:number };
 type Analysis = { aiHealthScore: number; priorityScore: number; overdueDays: number; ruleVersion: string;
   explanations: { factor: string; detail: string; severity: string }[]; limitations: string[] };
 type Photo = { id: number; caption: string; distanceKm: number | null; duplicateCandidates: { evidenceId: number; exact: boolean }[]; filePath: string };
@@ -123,7 +125,7 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
           {demo ? "Connected to a synthetic demonstration database." : "Connected to your configured database."} <span className="break-all">{base}</span>
         </div>
         <nav className="flex gap-2 flex-wrap" aria-label="Workspace sections">
-          {["Overview", "Projects", "Map", "Inspections", "Reports", ...(isAdmin ? ["Administration"] : [])].map(item =>
+          {["Overview", "Projects", "Map", "Agencies", "Coverage", "Inspections", "Reports", ...(isAdmin ? ["Administration"] : [])].map(item =>
             <button key={item} className={tab === item ? button : "rounded-lg border px-4 py-2 text-sm bg-white"} onClick={() => { setTab(item); setSelected(null); setCurrent(null); }}>{item}</button>)}
           <button className="ml-auto text-sm text-blue-700 underline" disabled={busy} onClick={() => run(() => load())}>Refresh records</button>
         </nav>
@@ -176,6 +178,7 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
                 {users.filter(u => u.role === "Inspecting / Field Officer").map(u => <option key={u.id} value={u.id}>{u.displayName}</option>)}</select></label>
               <Input label="Inspection date" name="date" type="date" /><button className={button + " self-end"} disabled={busy}>Assign inspection</button>
             </form>}
+            <Monitoring base={base} token={token} pid={selected.id} canManage={canManage} />
             <h3 className="font-semibold">Photo evidence</h3>
             {photos.map(p => <div key={p.id} className="rounded-lg border p-3 text-sm flex flex-wrap gap-3 justify-between">
               <span>#{p.id} {p.caption} · {p.distanceKm === null ? "Location unavailable" : p.distanceKm + " km from project"}
@@ -253,9 +256,14 @@ export default function Workspace({initialTab = "Overview"}: {initialTab?: strin
           </div>}
         </section>}
 
+        {tab === "Agencies" && <section className={card}><h2 className="text-xl font-bold mb-3">Agency performance</h2><p className="text-sm text-slate-500 mb-5">Only projects visible to this account contribute to these comparisons. Health is a rules-based score. Overdue days describe incomplete projects, not historical completion delays.</p><div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr>{["Agency","Projects","Completed","Average overdue days","Average health"].map(h=><th className="p-3" key={h}>{h}</th>)}</tr></thead><tbody>{agencies.map(a=><tr key={a.id} className="border-t"><td className="p-3 font-semibold">{a.name}</td><td className="p-3">{a.projectsCount}</td><td className="p-3">{a.completionRatePct}%</td><td className="p-3">{a.avgDelayDays}</td><td className="p-3">{a.aiScore}/100</td></tr>)}</tbody></table></div></section>}
+        {tab === "Coverage" && <Coverage base={base} token={token} constituencies={constituencies} canManage={canManage} />}
+        {tab === "Administration" && !isAdmin && <p className={card}>Account administration requires an administrator role.</p>}
         {tab === "Reports" && <section className={card + " space-y-4"}><h2 className="text-xl font-semibold">Reports and audit history</h2>
           <p className="text-sm text-slate-600">Downloads contain only records you are authorized to access.</p>
-          <div className="flex gap-3 flex-wrap">
+          <button className="text-blue-700 underline print:hidden" onClick={()=>window.print()}>Print this report / Save PDF</button>
+          <div className="grid sm:grid-cols-3 gap-3">{[["Projects",projects.length],["Allocated (Cr)",projects.reduce((s,p)=>s+p.sanctionedAmountCr,0).toFixed(2)],["Spent (Cr)",projects.reduce((s,p)=>s+p.expenditureCr,0).toFixed(2)]].map(([label,value])=><p key={label} className="rounded-lg bg-slate-50 p-4">{label}: <strong>{value}</strong></p>)}</div><table className="w-full text-sm text-left"><thead><tr><th>Project</th><th>Progress</th><th>Spent (Cr)</th><th>Priority</th></tr></thead><tbody>{projects.map(p=><tr className="border-t" key={p.id}><td className="py-2">{p.code} · {p.name}</td><td>{p.physicalProgressPct}%</td><td>{p.expenditureCr}</td><td>{p.riskLevel}</td></tr>)}</tbody></table>
+          <div className="flex gap-3 flex-wrap print:hidden">
             {[["/reports/export", "projects.csv", "Export projects"], ["/reports/fund-utilization", "fund-utilization.json", "Fund utilization"],
               ["/audit", "audit-history.json", "Audit history"]].map(([path,name,label]) => <button key={path} className={button} disabled={busy} onClick={() => run(() => download(base,token,path,name))}>{label}</button>)}
           </div></section>}

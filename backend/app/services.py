@@ -112,7 +112,7 @@ def kpis(projects):
     n = len(projects)
     allocated = sum(p.sanctioned_amount_cr for p in projects)
     spent = sum(p.expenditure_cr for p in projects)
-    high = sum(p.risk_level.value in {"High", "Critical"} for p in projects)
+    high = sum(analyze(p)["riskLevel"] in {"High", "Critical"} for p in projects)
     delayed = sum(p.physical_progress_pct < 100 and p.expected_end_date < date.today() for p in projects)
     return {"totalProjects": n, "totalProjectsYoY": None, "highRisk": high,
             "highRiskPct": round(high / n * 100, 1) if n else 0, "delayed": delayed,
@@ -130,4 +130,4 @@ def agency_out(agency, projects):
             "delayDefinition": "Current overdue days among incomplete projects; not historical completion delay",
             "costVariationPct": None, "stalledProjects": None,
             "updateConsistencyPct": round(sum(p.update_consistency_pct for p in projects) / n, 1) if n else 0,
-            "aiScore": round(sum(p.ai_health_score for p in projects) / n, 1) if n else 0}
+            "aiScore": round(sum(analyze(p)["aiHealthScore"] for p in projects) / n, 1) if n else 0}

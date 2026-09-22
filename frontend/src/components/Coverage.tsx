@@ -1,0 +1,16 @@
+"use client";
+import {useEffect,useState} from "react";
+import {request} from "@/lib/backend";
+type Gap={sector:string;unit:string;need:number;covered:number;gapPct:number;source:string;asOf:string};
+export default function Coverage({base,token,constituencies,canManage}:{base:string;token:string;constituencies:{id:number|string;name:string}[];canManage:boolean}) {
+  const [cid,setCid]=useState(String(constituencies[0]?.id||"")),[rows,setRows]=useState<Gap[]>([]),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+  useEffect(()=>{setRows([]);setError("");if(cid)request<Gap[]>(base,token,"/constituencies/"+cid+"/sector-gaps").then(setRows).catch(e=>setError(e.message));},[base,token,cid]);
+  return <section className="rounded-xl bg-white border p-5 space-y-5"><h2 className="text-xl font-bold">Constituency development coverage</h2><p className="text-sm text-slate-600">Measure unmet service needs using a dated source and consistent units. Project counts alone do not establish a development gap.</p>
+    <label className="block">Constituency<select className="block border rounded-lg p-3 mt-1" value={cid} onChange={e=>setCid(e.target.value)}>{constituencies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+    {error&&<p role="alert" className="text-red-700">{error}</p>}
+    {!rows.length&&<p>No sourced coverage measurements recorded for this constituency.</p>}
+    {rows.map(g=><article key={g.sector} className="border rounded-lg p-4"><h3 className="font-bold">{g.sector} · {g.gapPct}% unmet</h3><div className="h-3 bg-slate-100 rounded my-3"><div className="bg-amber-500 h-3 rounded" style={{width:g.gapPct+"%"}}/></div><p>{g.covered} of {g.need} {g.unit||"service units"} covered</p><p className="text-sm text-slate-500">Source: {g.source} · As of {g.asOf}</p><p className="text-sm mt-2">Planning consideration: validate the remaining {g.need-g.covered} units and prioritize against local demand, feasibility and available funds.</p></article>)}
+    {canManage&&cid&&<details><summary className="font-semibold cursor-pointer">Record or revise a coverage measurement</summary><form className="grid sm:grid-cols-2 gap-4 mt-4" onSubmit={async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.currentTarget)) as Record<string,string>;setBusy(true);setError("");try {await request(base,token,"/constituencies/"+cid+"/sector-gaps",{method:"POST",body:JSON.stringify({...v,need:Number(v.need),covered:Number(v.covered)})});setRows(await request<Gap[]>(base,token,"/constituencies/"+cid+"/sector-gaps"));}catch(e){setError(e instanceof Error?e.message:"Save failed");}finally{setBusy(false);}}}>
+      {[["sector","Sector","text"],["unit","Measurement unit (e.g. households)","text"],["need","Total service need","number"],["covered","Currently covered","number"],["source","Survey or source reference","text"],["asOf","Measurement date","date"]].map(([name,label,type])=><label className="block text-sm" key={name}>{label}<input className="block w-full rounded-lg border p-3 mt-1" required name={name} type={type} step="any"/></label>)}<button className="rounded-lg bg-blue-700 text-white px-4 py-3" disabled={busy}>Save measurement</button></form></details>}
+  </section>;
+}

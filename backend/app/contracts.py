@@ -83,6 +83,7 @@ class MilestoneInput(CamelModel):
     status: Literal["Completed", "In Progress", "Delayed", "Pending"]
 
 class GapInput(CamelModel):
+    unit: str = Field(default="service units", min_length=1, max_length=100)
     sector: str = Field(min_length=1, max_length=100)
     need: float = Field(gt=0)
     covered: float = Field(ge=0)

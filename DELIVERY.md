@@ -9,7 +9,7 @@ Branch: feature/mplads-ai-dashboard. Each completed checkpoint is committed and 
 5. Photo evidence and duplicate checks: implemented and tested.
 6. Inspection workflow and field interface: implemented and tested.
 7. Dashboard integration: implemented and tested.
-8. Agencies, reports and sourced coverage: planned.
+8. Agencies, reports and sourced coverage: implemented and tested.
 9. End-to-end verification and fixes: planned.
 10. Deployment and release verification: planned.
 
@@ -35,3 +35,6 @@ Added the Android/iPhone browser field app with explicit device draft saves, que
 
 ## Checkpoint 7
 The main entry now opens the connected dashboard, with scoped overview, priority queue, map, project creation/updates, imports, evidence, inspections, reports and account administration. The original design is preserved at /demo with a sample-data banner. Project updates send a revision timestamp to prevent silent stale edits. API failures show actionable errors instead of falling back to mock data.
+
+## Checkpoint 8
+Added sourced cost benchmarks, scoped geographic/name duplicate-work candidates, documentation-completeness checks, recorded financial history, agency comparisons, printable reports and coverage measurement entry with provenance/units. Duplicate or split-work flags are review candidates; no fraud determination or statutory compliance claim is made. Scores returned to the dashboard use current dates rather than stale cached values.

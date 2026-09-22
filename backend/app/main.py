@@ -12,6 +12,7 @@ from app import models, operational_models
 from app.api import router as api
 from app.evidence_api import router as evidence
 from app.inspection_api import router as inspections
+from app.monitoring_api import router as monitoring
 
 @asynccontextmanager
 async def lifespan(app):
@@ -39,7 +40,7 @@ async def security_headers(request, call_next):
         response.headers["Cache-Control"] = "no-store"
     return response
 
-for router in (api, evidence, inspections):
+for router in (api, evidence, inspections, monitoring):
     app.include_router(router, prefix="/api/v1")
 
 @app.get("/health")
