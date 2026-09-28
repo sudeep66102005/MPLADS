@@ -53,7 +53,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-0.5">
         {navItems.map((item) => {
-          const active = pathname === item.href;
+          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
             <Link
