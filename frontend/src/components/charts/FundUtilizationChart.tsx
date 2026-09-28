@@ -1,10 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis
@@ -15,10 +15,22 @@ interface FundUtilizationChartProps {
 }
 
 export function FundUtilizationChart({ data }: FundUtilizationChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(320);
+
+  useEffect(() => {
+    const measure = () => {
+      const nextWidth = Math.floor(containerRef.current?.getBoundingClientRect().width ?? 320);
+      if (nextWidth > 0) setWidth(nextWidth);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   return (
-    <div className="h-[190px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+    <div ref={containerRef} className="h-[190px] w-full overflow-hidden">
+        <AreaChart width={width} height={190} data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradAllocated" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.28} />
@@ -75,7 +87,6 @@ export function FundUtilizationChart({ data }: FundUtilizationChartProps) {
             dot={{ r: 3, fill: "#16a34a", strokeWidth: 0 }}
           />
         </AreaChart>
-      </ResponsiveContainer>
     </div>
   );
 }

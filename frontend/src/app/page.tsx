@@ -1,2 +1,5 @@
-import Workspace from "@/components/Workspace";
-export default function Page() { return <Workspace initialTab="Overview" />; }
+import { DashboardHome } from "@/components/dashboard/DashboardHome";
+
+export default function Page() {
+  return <DashboardHome />;
+}

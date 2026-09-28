@@ -45,6 +45,10 @@ body {
   margin-top: 44px;
 }
 
+.dashboard-map .leaflet-top.leaflet-left {
+  margin-top: 0;
+}
+
 .leaflet-container {
   font-family: inherit;
   background: #e7edf0;

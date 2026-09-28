@@ -27,7 +27,11 @@ const nextConfig = {
   // static file hosting resolves routes without server rewrites.
   trailingSlash: true,
 
-  reactStrictMode: true,
+  // react-leaflet owns an imperative DOM container. React's development-only
+  // double mount reuses that node and makes Leaflet throw "already initialized".
+  // Production is unaffected, but disabling the double mount keeps local UI
+  // review reliable and matches the lifecycle expected by react-leaflet.
+  reactStrictMode: false,
 
   // Expose the base path to client code that needs to build asset URLs.
   env: { NEXT_PUBLIC_BASE_PATH: basePath }
