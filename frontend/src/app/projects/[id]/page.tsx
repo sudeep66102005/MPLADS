@@ -173,7 +173,7 @@ export default async function ProjectAnalysisPage({ params }: { params: Promise<
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[11px] text-slate-500">
               <span className="flex items-center gap-1">
                 <MapPin size={11} className="text-slate-400" />
-                {project.district}, {project.state}
+                {project.constituency.replace(" MP", ", MP")}
               </span>
               <span className="flex items-center gap-1">
                 <Building2 size={11} className="text-slate-400" />
@@ -474,7 +474,7 @@ export default async function ProjectAnalysisPage({ params }: { params: Promise<
 
         <section className="card p-3.5">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[12.5px] font-bold text-slate-800">Risk Indicators</h2>
+            <h2 className="text-[12.5px] font-bold text-slate-800">Risk Indicators &amp; Anomalies</h2>
             <span className="text-[8.5px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 shrink-0">
               {d.highRiskCount} High Risk
             </span>
